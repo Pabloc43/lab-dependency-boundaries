@@ -1,5 +1,7 @@
 # Dependency Boundaries Lab
 
+[Demo](https://pabloc43.github.io/lab-dependency-boundaries/) · [Ejecuciones del CI](https://github.com/Pabloc43/lab-dependency-boundaries/actions)
+
 Una aplicación de pedidos para poner a prueba una decisión concreta: **el dominio no debe conocer la interfaz**.
 
 Es el primer proyecto de la colección `lab-` de [Pabloc43](https://github.com/Pabloc43). No es una plantilla de arquitectura ni una tienda lista para producción. Hay pocas piezas a propósito: si no podemos explicar una regla en este tamaño, agregar capas no la vuelve más clara.
@@ -63,7 +65,7 @@ Playwright verifica el pedido en escritorio y móvil, errores visibles, la naveg
 
 El workflow valida las pull requests sin publicar. En `main`, el mismo artefacto que pasó las pruebas de navegador se publica en GitHub Pages. Acciones fijadas por SHA, instalación con lockfile y permisos mínimos: lectura de contenido para validar; escritura de Pages e identidad OIDC solo para desplegar. No usa tokens personales.
 
-En el repositorio público, habilita **Settings → Pages → Source → GitHub Actions**. El sitio quedará en `https://pabloc43.github.io/lab-dependency-boundaries/` cuando finalice un despliegue correcto. La URL indicada es la ruta prevista, no evidencia de que esté publicado.
+En el repositorio público, habilita **Settings → Pages → Source → GitHub Actions**. La demo está publicada en [GitHub Pages](https://pabloc43.github.io/lab-dependency-boundaries/). Las ejecuciones y sus resultados se pueden consultar en [Actions](https://github.com/Pabloc43/lab-dependency-boundaries/actions).
 
 GitHub Pages aloja archivos estáticos. El proyecto no utiliza funciones, cuentas, dominios pagos ni runners grandes. Ver condiciones y límites actuales en [Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/) y [Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 
@@ -71,7 +73,7 @@ GitHub Pages aloja archivos estáticos. El proyecto no utiliza funciones, cuenta
 
 La página incorpora vistas previas estáticas con texto alternativo y enlaces al visor independiente. El visor de Archify presenta una limitación conocida de accesibilidad automática (`nested-interactive` en su SVG); no se afirma conformidad de ese visor.
 
-Los diagramas de arquitectura y CI se generan con [Archify](https://github.com/tt-a1i/archify), bajo licencia MIT. El contenido está en español; los controles fijos del visor utilizan inglés. El mapa resume relaciones principales, no todos los imports del proyecto. Sus flechas representan imports, no llamadas en tiempo de ejecución.
+Los diagramas de arquitectura y CI se generan con [Archify](https://github.com/tt-a1i/archify), bajo licencia MIT; se incluyen su [licencia](public/diagrams/ARCHIFY-LICENSE.txt) y [avisos de redistribución](public/diagrams/ARCHIFY-NOTICES.md). El contenido está en español; los controles fijos del visor utilizan inglés. El mapa resume relaciones principales, no todos los imports del proyecto. Sus flechas representan imports, no llamadas en tiempo de ejecución.
 
 No hay pagos, stock, autenticación, impuestos, concurrencia entre usuarios ni persistencia tras recargar. Todos los productos y precios son ficticios. La falla de guardado es una opción explícita de la demo; no representa una caída de un servicio real.
 
