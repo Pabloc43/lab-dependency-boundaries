@@ -53,6 +53,8 @@ test('loads real reports, has no horizontal overflow and passes automated access
   await page
     .getByText('Ver la configuración que usa este proyecto', { exact: true })
     .click();
+  await page.getByRole('button', { name: 'Dependencia circular', exact: true }).click();
+  await page.getByText('Ver informe técnico del ciclo', { exact: true }).click();
   await loadDiagrams(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -186,15 +188,6 @@ test('uses selectable editor colors without changing example or configuration so
       button: 'Aplicación válida',
       source: evidence.snippets['src/application/create-order.ts'],
     },
-    {
-      button: 'Dependencia circular',
-      source: JSON.stringify(
-        evidence.results.find((result: { id: string }) => result.id === 'cycle')
-          .violations,
-        null,
-        2,
-      ),
-    },
   ];
   for (const example of examples) {
     await page.getByRole('button', { name: example.button, exact: true }).click();
@@ -221,6 +214,46 @@ test('uses selectable editor colors without changing example or configuration so
       'auto',
     );
   }
+  await page.getByRole('button', { name: 'Dependencia circular', exact: true }).click();
+  for (const file of ['a.ts', 'b.ts']) {
+    const block = page.getByRole('region', { name: `Código de ${file}`, exact: true });
+    await expect(block).toBeVisible();
+    expect(await block.locator('code').textContent()).toBe(
+      evidence.snippets[`fixtures/cycle/src/domain/${file}`],
+    );
+    const colors = await block
+      .locator('span')
+      .evaluateAll((tokens) => [
+        ...new Set(
+          tokens
+            .filter((token) => token.textContent?.trim())
+            .map((token) => getComputedStyle(token).color),
+        ),
+      ]);
+    expect(colors.length).toBeGreaterThan(1);
+  }
+  await expect(
+    page.getByRole('group', { name: 'Ciclo detectado', exact: true }),
+  ).toHaveText('a.ts → b.ts → a.ts');
+  await expect(
+    page.getByText('Un import de dominio a dominio está permitido;', { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Es el nombre de una regla, no un valor booleano.', { exact: false }),
+  ).toBeVisible();
+  await page.getByText('Ver informe técnico del ciclo', { exact: true }).click();
+  expect(
+    await page
+      .getByRole('region', { name: 'Informe técnico del ciclo', exact: true })
+      .locator('code')
+      .textContent(),
+  ).toBe(
+    JSON.stringify(
+      evidence.results.find((result: { id: string }) => result.id === 'cycle').violations,
+      null,
+      2,
+    ),
+  );
   await page
     .getByText('Ver la configuración que usa este proyecto', { exact: true })
     .click();
@@ -293,6 +326,13 @@ test('keeps raw snippets and real reports usable with older evidence without tok
     original = evidence;
     delete evidence.highlightedSnippets;
     delete evidence.highlightedReports;
+    delete evidence.snippets['fixtures/cycle/src/domain/a.ts'];
+    delete evidence.snippets['fixtures/cycle/src/domain/b.ts'];
+    for (const result of evidence.results) {
+      for (const violation of result.violations) {
+        delete violation.cyclePath;
+      }
+    }
     await route.fulfill({ response, json: evidence });
   });
   await page.goto('./');
@@ -309,7 +349,22 @@ test('keeps raw snippets and real reports usable with older evidence without tok
     original!.snippets['src/application/create-order.ts'],
   );
   await page.getByRole('button', { name: 'Dependencia circular', exact: true }).click();
-  expect(await block.locator('code').textContent()).toBe(
+  await expect(
+    page.getByText(
+      'Esta versión de la evidencia no incluye el código de los dos fixtures.',
+      { exact: false },
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('group', { name: 'Ciclo detectado', exact: true }),
+  ).toHaveCount(0);
+  await page.getByText('Ver informe técnico del ciclo', { exact: true }).click();
+  expect(
+    await page
+      .getByRole('region', { name: 'Informe técnico del ciclo', exact: true })
+      .locator('code')
+      .textContent(),
+  ).toBe(
     JSON.stringify(
       original!.results.find(({ id }) => id === 'cycle')?.violations,
       null,
