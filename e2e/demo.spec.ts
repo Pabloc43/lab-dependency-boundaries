@@ -50,6 +50,9 @@ test('loads real reports, has no horizontal overflow and passes automated access
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
   ).toBe(true);
+  await page
+    .getByText('Ver la configuración que usa este proyecto', { exact: true })
+    .click();
   await loadDiagrams(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -164,4 +167,164 @@ test('shows a useful fallback when a viewer response is not a valid diagram', as
   await expect(
     page.getByRole('link', { name: 'Abrir diagrama interactivo ↗', exact: true }),
   ).toBeVisible();
+});
+
+test('uses selectable editor colors without changing example or configuration source', async ({
+  page,
+}) => {
+  const response = await page.request.get(
+    'http://127.0.0.1:4173/lab-dependency-boundaries/evidence.json',
+  );
+  const evidence = await response.json();
+  await page.goto('./');
+  const examples = [
+    {
+      button: 'Import incorrecto',
+      source: evidence.snippets['fixtures/domain-to-ui/src/domain/order.ts'],
+    },
+    {
+      button: 'Aplicación válida',
+      source: evidence.snippets['src/application/create-order.ts'],
+    },
+    {
+      button: 'Dependencia circular',
+      source: JSON.stringify(
+        evidence.results.find((result: { id: string }) => result.id === 'cycle')
+          .violations,
+        null,
+        2,
+      ),
+    },
+  ];
+  for (const example of examples) {
+    await page.getByRole('button', { name: example.button, exact: true }).click();
+    const block = page.getByRole('region', {
+      name: 'Código del ejemplo seleccionado',
+      exact: true,
+    });
+    await expect(block).toBeVisible();
+    expect(await block.locator('code').textContent()).toBe(example.source);
+    const colors = await block
+      .locator('span')
+      .evaluateAll((tokens) => [
+        ...new Set(
+          tokens
+            .filter((token) => token.textContent?.trim())
+            .map((token) => getComputedStyle(token).color),
+        ),
+      ]);
+    expect(colors.length).toBeGreaterThan(1);
+    expect(await block.evaluate((element) => getComputedStyle(element).whiteSpace)).toBe(
+      'pre',
+    );
+    expect(await block.evaluate((element) => getComputedStyle(element).overflowX)).toBe(
+      'auto',
+    );
+  }
+  await page
+    .getByText('Ver la configuración que usa este proyecto', { exact: true })
+    .click();
+  const config = page.getByRole('region', {
+    name: 'Configuración de dependency-cruiser',
+    exact: true,
+  });
+  expect(await config.locator('code').textContent()).toBe(
+    evidence.snippets['.dependency-cruiser.cjs'],
+  );
+  const colors = await config
+    .locator('span')
+    .evaluateAll((tokens) => [
+      ...new Set(
+        tokens
+          .filter((token) => token.textContent?.trim())
+          .map((token) => getComputedStyle(token).color),
+      ),
+    ]);
+  expect(colors.length).toBeGreaterThan(1);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).toBe(true);
+});
+
+test('renders literal angle brackets as code text, never executable markup', async ({
+  page,
+}) => {
+  const source = 'const literal = "<img src=x onerror=alert(1)>";\n';
+  const dialogs: string[] = [];
+  page.on('dialog', (dialog) => {
+    dialogs.push(dialog.message());
+    void dialog.dismiss();
+  });
+  await page.route('**/evidence.json', async (route) => {
+    const response = await route.fetch();
+    const evidence = await response.json();
+    const file = 'fixtures/domain-to-ui/src/domain/order.ts';
+    evidence.snippets[file] = source;
+    evidence.highlightedSnippets[file] = {
+      source,
+      language: 'typescript',
+      lines: [{ tokens: [{ content: source, color: '#ce9178' }], ending: '' }],
+    };
+    await route.fulfill({ response, json: evidence });
+  });
+  await page.goto('./');
+  const block = page.getByRole('region', {
+    name: 'Código del ejemplo seleccionado',
+    exact: true,
+  });
+  await expect(block).toBeVisible();
+  expect(await block.locator('code').textContent()).toBe(source);
+  await expect(block.locator('img, script')).toHaveCount(0);
+  expect(dialogs).toEqual([]);
+});
+
+test('keeps raw snippets and real reports usable with older evidence without tokens', async ({
+  page,
+}) => {
+  let original: {
+    snippets: Record<string, string>;
+    results: { id: string; violations: unknown[] }[];
+  };
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.route('**/evidence.json', async (route) => {
+    const response = await route.fetch();
+    const evidence = await response.json();
+    original = evidence;
+    delete evidence.highlightedSnippets;
+    delete evidence.highlightedReports;
+    await route.fulfill({ response, json: evidence });
+  });
+  await page.goto('./');
+  const block = page.getByRole('region', {
+    name: 'Código del ejemplo seleccionado',
+    exact: true,
+  });
+  await expect(block).toBeVisible();
+  expect(await block.locator('code').textContent()).toBe(
+    original!.snippets['fixtures/domain-to-ui/src/domain/order.ts'],
+  );
+  await page.getByRole('button', { name: 'Aplicación válida', exact: true }).click();
+  expect(await block.locator('code').textContent()).toBe(
+    original!.snippets['src/application/create-order.ts'],
+  );
+  await page.getByRole('button', { name: 'Dependencia circular', exact: true }).click();
+  expect(await block.locator('code').textContent()).toBe(
+    JSON.stringify(
+      original!.results.find(({ id }) => id === 'cycle')?.violations,
+      null,
+      2,
+    ),
+  );
+  await page
+    .getByText('Ver la configuración que usa este proyecto', { exact: true })
+    .click();
+  const config = page.getByRole('region', {
+    name: 'Configuración de dependency-cruiser',
+    exact: true,
+  });
+  expect(await config.locator('code').textContent()).toBe(
+    original!.snippets['.dependency-cruiser.cjs'],
+  );
+  expect(errors).toEqual([]);
 });
