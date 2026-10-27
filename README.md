@@ -71,7 +71,9 @@ GitHub Pages aloja archivos estáticos. El proyecto no utiliza funciones, cuenta
 
 ## Diagramas y límites del experimento
 
-La página incorpora vistas previas estáticas con texto alternativo y enlaces al visor independiente. El visor de Archify presenta una limitación conocida de accesibilidad automática (`nested-interactive` en su SVG); no se afirma conformidad de ese visor.
+La página incorpora los dos visores interactivos en iframes del mismo origen, con un resumen textual y un enlace a la versión independiente. El componente `DiagramEmbed` valida la estructura esperada al cargar cada visor y corrige exclusivamente el rol del SVG raíz de `img` a `group`: el contenedor conserva su nombre y descripción, y los nodos mantienen sus botones y comportamiento de teclado. Un gráfico interactivo no puede presentarse como una imagen atómica en el árbol de accesibilidad.
+
+Esta adaptación pertenece a la integración: no modifica los HTML generados, sus especificaciones ni la instalación de Archify. Si el documento no carga o no presenta la estructura esperada, se muestra un aviso junto al resumen y al enlace alternativo, sin una espera arbitraria. La versión independiente conserva una limitación conocida de accesibilidad automática (`nested-interactive`); la corrección se aplica únicamente al visor integrado. Las pruebas cargan ambos iframes y analizan sus descendientes con axe sin excluir reglas. Esto no equivale a afirmar conformidad completa con WCAG.
 
 Los diagramas de arquitectura y CI se generan con [Archify](https://github.com/tt-a1i/archify), bajo licencia MIT; se incluyen su [licencia](public/diagrams/ARCHIFY-LICENSE.txt) y [avisos de redistribución](public/diagrams/ARCHIFY-NOTICES.md). El contenido está en español; los controles fijos del visor utilizan inglés. El mapa resume relaciones principales, no todos los imports del proyecto. Sus flechas representan imports, no llamadas en tiempo de ejecución.
 
