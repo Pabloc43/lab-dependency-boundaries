@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/
+docs/diagrams/
+test-results/
+playwright-report/
+pnpm-lock.yaml
