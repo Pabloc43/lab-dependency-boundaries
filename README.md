@@ -51,6 +51,8 @@ Este comando ejecuta dependency-cruiser sobre la aplicación y sobre dos fixture
 
 También se prohíben imports de aplicación hacia infraestructura/UI, de UI hacia infraestructura y dependencias no resueltas. Los imports de tipos cuentan: las dependencias arquitectónicas no desaparecen porque TypeScript las borre al compilar.
 
+En el caso circular, la página muestra los dos archivos reales: `a.ts` importa `b.ts` y `b.ts` importa `a.ts`. Los imports entre módulos de dominio están permitidos; la infracción es cerrar un ciclo. El recorrido se obtiene del campo `cycle` del analizador y el build comprueba que cada arista exista en su grafo. `no-circular` es el nombre de la regla «No permitir ciclos», no un booleano. El informe normalizado queda disponible en un desplegable.
+
 Los fixtures no se importan desde la aplicación y no entran en el bundle. Para probar un cambio real, introduce temporalmente un import de `src/domain/` hacia `src/ui/` y ejecuta `pnpm architecture`: el escenario válido deberá fallar. Revierte el cambio antes de continuar.
 
 El build genera `public/evidence.json` leyendo los informes reales y fragmentos del código. La página muestra ese resultado, incluida su fecha UTC. **No es un analizador online ni un indicador del último CI**; el enlace a Actions permite consultar las ejecuciones. No se versiona la evidencia generada.
