@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Dependencias del código, no llamadas en ejecución",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "backend": {
+          "label": "Módulo lógico"
+        },
+        "database": {
+          "label": "Adaptador en memoria"
+        },
+        "frontend": {
+          "label": "Interfaz"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Interfaz React",
+      "sublabel": "Formulario y estado visual",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        240,
+        90
+      ]
+    },
+    {
+      "id": "application",
+      "type": "backend",
+      "label": "Aplicación",
+      "sublabel": "Caso de uso y puerto",
+      "pos": [
+        460,
+        100
+      ],
+      "size": [
+        240,
+        90
+      ]
+    },
+    {
+      "id": "domain",
+      "type": "backend",
+      "label": "Dominio",
+      "sublabel": "Pedido y reglas puras",
+      "pos": [
+        860,
+        100
+      ],
+      "size": [
+        240,
+        90
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "type": "database",
+      "label": "Infraestructura",
+      "sublabel": "Repositorio en memoria",
+      "pos": [
+        460,
+        400
+      ],
+      "size": [
+        240,
+        90
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "ui",
+      "to": "application",
+      "label": "importa",
+      "variant": "emphasis"
+    },
+    {
+      "from": "application",
+      "to": "domain",
+      "label": "importa",
+      "variant": "emphasis"
+    },
+    {
+      "from": "infrastructure",
+      "to": "application",
+      "label": "importa el puerto",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Dirección elegida",
+      "items": [
+        "Las flechas representan imports estáticos.",
+        "El dominio no importa las otras capas."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Composición",
+      "items": [
+        "La raíz conecta el caso de uso con el adaptador.",
+        "El puerto permite sustituir la persistencia."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Límite de la herramienta",
+      "items": [
+        "Comprueba reglas, no calidad del diseño.",
+        "Esta demo no tiene servidor ni persistencia durable."
+      ]
+    }
+  ]
+}

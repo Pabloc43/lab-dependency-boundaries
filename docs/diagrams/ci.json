@@ -1,0 +1,118 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Comprobar primero, publicar después",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "checks",
+      "label": "GitHub Actions · validación"
+    },
+    {
+      "id": "buildlane",
+      "label": "Build y prueba de navegador"
+    },
+    {
+      "id": "release",
+      "label": "GitHub Pages · solo main"
+    }
+  ],
+  "mainPath": [
+    "change",
+    "install",
+    "validate",
+    "build",
+    "publish"
+  ],
+  "nodes": [
+    {
+      "id": "change",
+      "lane": "checks",
+      "col": 0,
+      "type": "external",
+      "label": "Cambio",
+      "sublabel": "push o pull request",
+      "width": 172
+    },
+    {
+      "id": "install",
+      "lane": "checks",
+      "col": 1,
+      "type": "backend",
+      "label": "pnpm install",
+      "sublabel": "--frozen-lockfile",
+      "width": 172
+    },
+    {
+      "id": "validate",
+      "lane": "checks",
+      "col": 2,
+      "type": "security",
+      "label": "Comprobaciones",
+      "sublabel": "tipos, lint y pruebas",
+      "width": 200
+    },
+    {
+      "id": "build",
+      "lane": "buildlane",
+      "col": 3,
+      "type": "backend",
+      "label": "Build y navegador",
+      "sublabel": "evidencia estática real",
+      "width": 200
+    },
+    {
+      "id": "publish",
+      "lane": "release",
+      "col": 3,
+      "type": "cloud",
+      "label": "Publicar demo",
+      "sublabel": "solo main validado",
+      "width": 200
+    }
+  ],
+  "edges": [
+    {
+      "from": "change",
+      "to": "install"
+    },
+    {
+      "from": "install",
+      "to": "validate"
+    },
+    {
+      "from": "validate",
+      "to": "build",
+      "label": "todo correcto"
+    },
+    {
+      "from": "build",
+      "to": "publish",
+      "label": "main",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Arquitectura",
+      "items": [
+        "El código válido no debe infringir reglas.",
+        "Los fixtures deben fallar por la regla esperada."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Sin simulación",
+      "items": [
+        "Una infracción inesperada detiene el pipeline.",
+        "Una pull request no despliega el sitio."
+      ]
+    }
+  ]
+}
