@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { createCodeHighlighter } from './highlight.ts';
 const scenarios = [
   { id: 'valid', root: 'src', expectedRules: [] },
   {
@@ -94,6 +95,20 @@ const snippets = Object.fromEntries(
     '.dependency-cruiser.cjs',
   ].map((file) => [file, readFileSync(file, 'utf8')]),
 );
+const highlighter = await createCodeHighlighter();
+const highlightedSnippets = Object.fromEntries(
+  Object.entries(snippets).map(([file, source]) => [
+    file,
+    highlighter.highlight(source, file.endsWith('.cjs') ? 'javascript' : 'typescript'),
+  ]),
+);
+const highlightedReports = Object.fromEntries(
+  results.map(({ id, violations }) => [
+    id,
+    highlighter.highlight(JSON.stringify(violations, null, 2), 'json'),
+  ]),
+);
+highlighter.dispose();
 mkdirSync('public', { recursive: true });
 writeFileSync(
   'public/evidence.json',
@@ -103,6 +118,8 @@ writeFileSync(
       tool: 'dependency-cruiser',
       results,
       snippets,
+      highlightedSnippets,
+      highlightedReports,
     },
     null,
     2,
