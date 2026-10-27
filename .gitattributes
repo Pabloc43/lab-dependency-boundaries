@@ -1,0 +1,3 @@
+# Generated viewers should not dominate language statistics or code review diffs.
+public/diagrams/*.html linguist-generated=true
+public/diagrams/*.png binary
