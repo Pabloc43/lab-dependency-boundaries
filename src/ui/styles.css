@@ -653,3 +653,23 @@ footer > div {
   display: block;
   border-top: 1px solid #d6d8d0;
 }
+
+.diagram-card > .diagram-embed {
+  padding: 0;
+}
+.diagram-summary {
+  padding: 0 28px 20px;
+  margin: 0;
+}
+.diagram-embed iframe {
+  height: 880px;
+}
+.diagram-fallback,
+.diagram-loading {
+  padding: 20px 28px;
+}
+@media (max-width: 800px) {
+  .diagram-embed iframe {
+    height: 800px;
+  }
+}

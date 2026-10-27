@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Product } from '../domain/order';
 import type { createOrder } from '../application/create-order';
+import { DiagramEmbed } from './DiagramEmbed';
 import { OrderDemo } from './OrderDemo';
 interface Evidence {
   generatedAt: string;
@@ -167,12 +168,10 @@ export function App(props: Props) {
                 Abrir diagrama interactivo ↗
               </a>
             </div>
-            <img
-              loading="lazy"
-              width="1440"
-              height="900"
-              alt="Dependencias: interfaz hacia aplicación y dominio; aplicación hacia dominio; infraestructura implementa el puerto de aplicación. El dominio no importa adaptadores."
-              src={`${base}diagrams/architecture.png`}
+            <DiagramEmbed
+              title="Mapa de dependencias"
+              src={`${base}diagrams/architecture.html`}
+              summary="La interfaz depende de aplicación y dominio; aplicación depende del dominio; infraestructura implementa el puerto de aplicación. El dominio no importa adaptadores. Selecciona un nodo para explorar sus relaciones."
             />
           </div>
         </section>
@@ -299,12 +298,10 @@ export function App(props: Props) {
                 Abrir diagrama del CI ↗
               </a>
             </div>
-            <img
-              loading="lazy"
-              width="1440"
-              height="900"
-              alt="El CI instala dependencias, valida tipos y lint, ejecuta pruebas y reglas, construye el sitio y lo publica solo desde main."
-              src={`${base}diagrams/ci.png`}
+            <DiagramEmbed
+              title="Ruta de validación del CI"
+              src={`${base}diagrams/ci.html`}
+              summary="El CI instala con lockfile, valida tipos y lint, ejecuta pruebas y reglas arquitectónicas, construye el sitio y publica solo desde main. Selecciona un paso para explorar sus conexiones."
             />
           </div>
           <div className="closing-grid">
