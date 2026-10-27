@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { deriveCyclePath } from './cycle-path.ts';
 import { createCodeHighlighter } from './highlight.ts';
 const scenarios = [
   { id: 'valid', root: 'src', expectedRules: [] },
@@ -84,7 +85,14 @@ const results = scenarios.map(({ id, root, expectedRules }) => {
     id,
     exitCode: run.status,
     moduleCount: report.summary.totalCruised,
-    violations: violations.map(({ from, to, rule }) => ({ from, to, rule: rule.name })),
+    violations: violations.map((violation) => ({
+      from: violation.from,
+      to: violation.to,
+      rule: violation.rule.name,
+      ...(violation.rule.name === 'no-circular'
+        ? { cyclePath: deriveCyclePath(violation, report.modules) }
+        : {}),
+    })),
   };
 });
 const snippets = Object.fromEntries(
@@ -93,6 +101,8 @@ const snippets = Object.fromEntries(
     'src/domain/order.ts',
     'fixtures/domain-to-ui/src/domain/order.ts',
     '.dependency-cruiser.cjs',
+    'fixtures/cycle/src/domain/a.ts',
+    'fixtures/cycle/src/domain/b.ts',
   ].map((file) => [file, readFileSync(file, 'utf8')]),
 );
 const highlighter = await createCodeHighlighter();
