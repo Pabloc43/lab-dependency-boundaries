@@ -55,6 +55,8 @@ Los fixtures no se importan desde la aplicación y no entran en el bundle. Para 
 
 El build genera `public/evidence.json` leyendo los informes reales y fragmentos del código. La página muestra ese resultado, incluida su fecha UTC. **No es un analizador online ni un indicador del último CI**; el enlace a Actions permite consultar las ejecuciones. No se versiona la evidencia generada.
 
+Los fragmentos y la configuración se colorean con Shiki durante el build, usando las gramáticas de TypeScript, JavaScript y JSON y el tema Dark+. Los tokens se renderizan como texto de React, no como HTML inyectado; cada bloque conserva el contenido original, incluidos espacios y saltos de línea. Los colores con contraste inferior a 4,5:1 se aclaran sobre el fondo real del bloque. El navegador descarga tokens adicionales en el JSON, pero no un motor de resaltado, gramáticas ni WASM. El ejemplo circular sigue mostrando el informe JSON real del análisis. La evidencia se revalida al cargar la página. Si llega una versión de la evidencia sin tokens —por ejemplo, desde caché— o estos no corresponden al texto original, el bloque muestra ese texto sin color en lugar de fallar.
+
 ## Pruebas
 
 `pnpm check` ejecuta formato con Prettier, tipos, lint, Vitest, comprobaciones arquitectónicas y build. `pnpm format` aplica el formato localmente. Las pruebas cubren totales, catálogo desconocido, cantidades inválidas, líneas duplicadas, precios inválidos, desbordamiento, persistencia y recuperación tras una falla.
