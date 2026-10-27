@@ -693,3 +693,33 @@ pre.code-block {
   margin-top: 20px;
   border-radius: 4px;
 }
+
+.cycle-note {
+  padding: 24px;
+  font-size: 0.85rem;
+}
+.cycle-explanation h4 {
+  margin: 20px 0 8px;
+  font-weight: 600;
+}
+.cycle-explanation p {
+  font-size: 0.85rem;
+}
+.cycle-path {
+  padding: 14px;
+  border: 1px solid #52656d;
+  border-radius: 4px;
+  margin: 18px 0;
+}
+.cycle-path code {
+  color: #e3d5a8;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.cycle-report summary {
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.cycle-report .code-block {
+  margin-top: 15px;
+}

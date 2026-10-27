@@ -11,7 +11,7 @@ interface Evidence {
     id: string;
     exitCode: number;
     moduleCount: number;
-    violations: { from: string; to: string; rule: string }[];
+    violations: { from: string; to: string; rule: string; cyclePath?: string[] }[];
   }[];
   snippets: Record<string, string>;
   highlightedSnippets?: Record<string, HighlightedCode>;
@@ -46,6 +46,9 @@ export function App(props: Props) {
     return () => controller.abort();
   }, []);
   const result = evidence?.results.find((item) => item.id === example);
+  const cyclePath = result?.violations.find(
+    ({ rule }) => rule === 'no-circular',
+  )?.cyclePath;
   return (
     <>
       <a className="skip-link" href="#contenido">
@@ -219,34 +222,54 @@ export function App(props: Props) {
           ) : (
             <div className="evidence-grid">
               <div className="code-card">
-                <div className="code-label">
-                  {example === 'domain-to-ui'
-                    ? 'fixtures/domain-to-ui/src/domain/order.ts'
-                    : example === 'cycle'
-                      ? 'Resultado del análisis del fixture circular'
-                      : 'src/application/create-order.ts'}
-                </div>
-                <CodeBlock
-                  label="Código del ejemplo seleccionado"
-                  source={
-                    example === 'cycle'
-                      ? JSON.stringify(result?.violations ?? [], null, 2)
-                      : evidence.snippets[
+                {example === 'cycle' ? (
+                  evidence.snippets['fixtures/cycle/src/domain/a.ts'] !== undefined &&
+                  evidence.snippets['fixtures/cycle/src/domain/b.ts'] !== undefined ? (
+                    ['a.ts', 'b.ts'].map((file) => {
+                      const path = `fixtures/cycle/src/domain/${file}`;
+                      return (
+                        <div key={file}>
+                          <div className="code-label">{path}</div>
+                          <CodeBlock
+                            label={`Código de ${file}`}
+                            source={evidence.snippets[path]}
+                            code={evidence.highlightedSnippets?.[path]}
+                          />
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="cycle-note">
+                      Esta versión de la evidencia no incluye el código de los dos
+                      fixtures. Puedes consultar el informe técnico a continuación.
+                    </p>
+                  )
+                ) : (
+                  <>
+                    <div className="code-label">
+                      {example === 'domain-to-ui'
+                        ? 'fixtures/domain-to-ui/src/domain/order.ts'
+                        : 'src/application/create-order.ts'}
+                    </div>
+                    <CodeBlock
+                      label="Código del ejemplo seleccionado"
+                      source={
+                        evidence.snippets[
                           example === 'domain-to-ui'
                             ? 'fixtures/domain-to-ui/src/domain/order.ts'
                             : 'src/application/create-order.ts'
                         ]
-                  }
-                  code={
-                    example === 'cycle'
-                      ? evidence.highlightedReports?.cycle
-                      : evidence.highlightedSnippets?.[
+                      }
+                      code={
+                        evidence.highlightedSnippets?.[
                           example === 'domain-to-ui'
                             ? 'fixtures/domain-to-ui/src/domain/order.ts'
                             : 'src/application/create-order.ts'
                         ]
-                  }
-                />
+                      }
+                    />
+                  </>
+                )}
               </div>
               <div className="report-card">
                 <span className={`report-label ${example === 'valid' ? 'valid' : ''}`}>
@@ -260,14 +283,53 @@ export function App(props: Props) {
                   Exit code: <strong>{result?.exitCode}</strong> · Módulos analizados:{' '}
                   <strong>{result?.moduleCount}</strong>
                 </p>
-                {result?.violations.map((violation, index) => (
-                  <div className="violation" key={`${violation.rule}-${index}`}>
-                    <strong>{violation.rule}</strong>
-                    <code>
-                      {violation.from} → {violation.to}
-                    </code>
+                {example === 'cycle' ? (
+                  <div className="cycle-explanation">
+                    <h4>No permitir ciclos</h4>
+                    <p>
+                      Los dos módulos pertenecen al dominio. Un import de dominio a
+                      dominio está permitido; el problema es que a.ts importa b.ts y b.ts
+                      vuelve a importar a.ts.
+                    </p>
+                    {cyclePath ? (
+                      <div
+                        className="cycle-path"
+                        role="group"
+                        aria-label="Ciclo detectado"
+                      >
+                        <code>
+                          {cyclePath.map((path) => path.split('/').at(-1)).join(' → ')}
+                        </code>
+                      </div>
+                    ) : (
+                      <p>
+                        Esta versión de la evidencia no incluye el recorrido completo del
+                        ciclo. No se reconstruye una cadena sin esos datos.
+                      </p>
+                    )}
+                    <p>
+                      La regla <code>no-circular</code> significa «No permitir ciclos». Es
+                      el nombre de una regla, no un valor booleano.
+                    </p>
+                    <details className="cycle-report">
+                      <summary>Ver informe técnico del ciclo</summary>
+                      <CodeBlock
+                        label="Informe técnico del ciclo"
+                        source={JSON.stringify(result?.violations ?? [], null, 2)}
+                        code={evidence.highlightedReports?.cycle}
+                      />
+                    </details>
                   </div>
-                ))}
+                ) : (
+                  result?.violations.map((violation, index) => (
+                    <div className="violation" key={`${violation.rule}-${index}`}>
+                      <strong>{violation.rule}</strong>
+                      <code>
+                        {violation.from} → {violation.to}
+                      </code>
+                    </div>
+                  ))
+                )}
                 <p className="small">
                   Informe real generado durante el build. El navegador muestra el
                   resultado; no ejecuta dependency-cruiser ni consulta el estado actual de
