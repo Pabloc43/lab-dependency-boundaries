@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { Product } from '../domain/order';
 import type { createOrder } from '../application/create-order';
+import { CodeBlock } from './CodeBlock';
+import type { HighlightedCode } from './code-types';
 import { DiagramEmbed } from './DiagramEmbed';
 import { OrderDemo } from './OrderDemo';
 interface Evidence {
@@ -12,6 +14,8 @@ interface Evidence {
     violations: { from: string; to: string; rule: string }[];
   }[];
   snippets: Record<string, string>;
+  highlightedSnippets?: Record<string, HighlightedCode>;
+  highlightedReports?: Record<string, HighlightedCode>;
 }
 interface Props {
   catalog: readonly Product[];
@@ -26,7 +30,7 @@ export function App(props: Props) {
   const [example, setExample] = useState('domain-to-ui');
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${base}evidence.json`, { signal: controller.signal })
+    fetch(`${base}evidence.json`, { signal: controller.signal, cache: 'no-cache' })
       .then((response) => {
         if (!response.ok) {
           throw new Error('Evidence unavailable');
@@ -222,15 +226,27 @@ export function App(props: Props) {
                       ? 'Resultado del análisis del fixture circular'
                       : 'src/application/create-order.ts'}
                 </div>
-                <pre>
-                  <code>
-                    {example === 'domain-to-ui'
-                      ? evidence.snippets['fixtures/domain-to-ui/src/domain/order.ts']
-                      : example === 'valid'
-                        ? evidence.snippets['src/application/create-order.ts']
-                        : JSON.stringify(result?.violations, null, 2)}
-                  </code>
-                </pre>
+                <CodeBlock
+                  label="Código del ejemplo seleccionado"
+                  source={
+                    example === 'cycle'
+                      ? JSON.stringify(result?.violations ?? [], null, 2)
+                      : evidence.snippets[
+                          example === 'domain-to-ui'
+                            ? 'fixtures/domain-to-ui/src/domain/order.ts'
+                            : 'src/application/create-order.ts'
+                        ]
+                  }
+                  code={
+                    example === 'cycle'
+                      ? evidence.highlightedReports?.cycle
+                      : evidence.highlightedSnippets?.[
+                          example === 'domain-to-ui'
+                            ? 'fixtures/domain-to-ui/src/domain/order.ts'
+                            : 'src/application/create-order.ts'
+                        ]
+                  }
+                />
               </div>
               <div className="report-card">
                 <span className={`report-label ${example === 'valid' ? 'valid' : ''}`}>
@@ -262,9 +278,15 @@ export function App(props: Props) {
           )}
           <details className="config-details">
             <summary>Ver la configuración que usa este proyecto</summary>
-            <pre>
-              <code>{evidence?.snippets['.dependency-cruiser.cjs'] ?? 'Cargando…'}</code>
-            </pre>
+            {evidence ? (
+              <CodeBlock
+                label="Configuración de dependency-cruiser"
+                source={evidence.snippets['.dependency-cruiser.cjs']}
+                code={evidence.highlightedSnippets?.['.dependency-cruiser.cjs']}
+              />
+            ) : (
+              <p>Cargando…</p>
+            )}
           </details>
           <p className="evidence-date">
             {evidence
