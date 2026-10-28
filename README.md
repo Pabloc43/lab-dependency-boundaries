@@ -61,6 +61,10 @@ Selecciona **Import incorrecto** o **Dependencia circular** en la demo. Reproduc
 
 La evidencia se genera del código durante el build: **no es un analizador online ni un indicador del último CI**. La herramienta verifica imports estáticos, no decide si una arquitectura es adecuada.
 
+## Herramientas utilizadas
+
+Las reglas de dependencias y los ciclos se comprueban con [dependency-cruiser](https://github.com/sverweij/dependency-cruiser). Los diagramas interactivos de arquitectura y CI se generaron con [Archify](https://github.com/tt-a1i/archify).
+
 ## Más detalle
 
 [Decisiones, pruebas, fallback, accesibilidad y despliegue](docs/technical-guide.md) · [MIT](LICENSE) · [Licencia y avisos de Archify](public/diagrams/ARCHIFY-NOTICES.md)
