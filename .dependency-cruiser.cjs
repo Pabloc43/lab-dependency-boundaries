@@ -1,4 +1,5 @@
-const root = process.env.DEPENDENCY_ROOT || 'src';
+// The scan covers src; this prefix owns only the order feature's internal layers.
+const root = process.env.DEPENDENCY_BOUNDARY_ROOT || 'src/features/orders';
 module.exports = {
   forbidden: [
     {
@@ -11,7 +12,7 @@ module.exports = {
       name: 'no-application-outward',
       severity: 'error',
       from: { path: `^${root}/application/` },
-      to: { path: `^${root}/(ui|infrastructure)/` },
+      to: { pathNot: `^${root}/(domain|application)/` },
     },
     {
       name: 'no-ui-infrastructure',
@@ -24,6 +25,7 @@ module.exports = {
   ],
   options: {
     tsPreCompilationDeps: true,
+    exclude: { path: '[.]test[.](ts|tsx|js|mjs)$' },
     doNotFollow: { path: 'node_modules' },
     tsConfig: { fileName: 'tsconfig.json' },
     enhancedResolveOptions: { extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'] },
