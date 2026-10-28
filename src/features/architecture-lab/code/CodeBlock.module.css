@@ -1,0 +1,28 @@
+.code-block {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+.code-block code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+.code-block {
+  background: #142733;
+  color: #d4d4d4;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-wrap: normal;
+  max-width: 100%;
+  min-width: 0;
+  tab-size: 2;
+  padding: 24px;
+}
+.code-block code {
+  white-space: inherit;
+  overflow-wrap: normal;
+}
