@@ -159,7 +159,9 @@ test('shows a useful fallback when a viewer response is not a valid diagram', as
     }),
   );
   await page.goto('./');
-  await page.locator('#limites .diagram-card').scrollIntoViewIfNeeded();
+  await page
+    .getByRole('region', { name: 'Mapa de dependencias', exact: true })
+    .scrollIntoViewIfNeeded();
   await expect(
     page.getByText('No fue posible preparar el visor integrado.', { exact: false }),
   ).toBeVisible();
@@ -186,7 +188,7 @@ test('uses selectable editor colors without changing example or configuration so
     },
     {
       button: 'Aplicación válida',
-      source: evidence.snippets['src/application/create-order.ts'],
+      source: evidence.snippets['src/features/orders/application/create-order.ts'],
     },
   ];
   for (const example of examples) {
@@ -346,7 +348,7 @@ test('keeps raw snippets and real reports usable with older evidence without tok
   );
   await page.getByRole('button', { name: 'Aplicación válida', exact: true }).click();
   expect(await block.locator('code').textContent()).toBe(
-    original!.snippets['src/application/create-order.ts'],
+    original!.snippets['src/features/orders/application/create-order.ts'],
   );
   await page.getByRole('button', { name: 'Dependencia circular', exact: true }).click();
   await expect(
@@ -382,4 +384,27 @@ test('keeps raw snippets and real reports usable with older evidence without tok
     original!.snippets['.dependency-cruiser.cjs'],
   );
   expect(errors).toEqual([]);
+});
+
+test('shows the actual historical source key when an older cached build is served', async ({
+  page,
+}) => {
+  await page.route('**/evidence.json', async (route) => {
+    const response = await route.fetch();
+    const evidence = await response.json();
+    const current = 'src/features/orders/application/create-order.ts';
+    const historical = 'src/application/create-order.ts';
+    evidence.snippets[historical] = evidence.snippets[current];
+    delete evidence.snippets[current];
+    delete evidence.highlightedSnippets;
+    await route.fulfill({ response, json: evidence });
+  });
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Aplicación válida', exact: true }).click();
+  await expect(
+    page.getByText('src/application/create-order.ts', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Código del ejemplo seleccionado', exact: true }),
+  ).toContainText('export function createOrder');
 });
