@@ -1,0 +1,51 @@
+.diagram-card {
+  background: #fffefa;
+  border: 1px solid #d6d8d0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.diagram-header {
+  padding: 25px 28px;
+}
+.diagram-header p {
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+.text-link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.diagram-summary {
+  font-size: 0.85rem;
+  padding: 0 28px 20px;
+  margin: 0 0 10px;
+}
+.viewer {
+  width: 100%;
+  height: 880px;
+  border: 0;
+  border-top: 1px solid #d6d8d0;
+  display: block;
+}
+.diagram-fallback,
+.diagram-loading {
+  font-size: 0.85rem;
+  padding: 20px 28px;
+  margin: 0 0 10px;
+}
+@media (max-width: 800px) {
+  .viewer {
+    height: 800px;
+  }
+}
+@media (max-width: 450px) {
+  .diagram-header {
+    padding: 22px;
+  }
+}
+
+.diagram-embed {
+  min-width: 0;
+}
