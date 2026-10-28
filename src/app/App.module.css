@@ -1,0 +1,157 @@
+.main,
+.site-header,
+.footer {
+  max-width: 1280px;
+  margin: auto;
+  padding-left: 56px;
+  padding-right: 56px;
+}
+.site-header {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d6d8d0;
+}
+.wordmark {
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  font-size: 1.25rem;
+}
+.wordmark span {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  margin-left: 8px;
+  color: #59686b;
+}
+.nav {
+  display: flex;
+  gap: 32px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.nav a {
+  text-decoration: none;
+}
+.hero {
+  padding: 64px 0 0;
+}
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.orange-dot {
+  display: inline-block;
+  background: #c4673d;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 9px;
+}
+.hero-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 50px;
+}
+.hero-bottom p {
+  max-width: 560px;
+  font-size: 1.06rem;
+}
+.text-link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.text-link span {
+  margin-left: 30px;
+}
+.hero-strip {
+  border-top: 1px solid #d6d8d0;
+  border-bottom: 1px solid #d6d8d0;
+  display: flex;
+  gap: 48px;
+  padding: 21px 0;
+  margin-top: 36px;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #5d6c70;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  padding-top: 35px;
+  padding-bottom: 35px;
+}
+.footer p,
+.footer a:not(.wordmark) {
+  font-size: 0.73rem;
+  margin: 0;
+}
+.footer > div {
+  display: flex;
+  gap: 20px;
+}
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 16px;
+  background: white;
+  padding: 10px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 8px;
+}
+@media (max-width: 800px) {
+  .main,
+  .site-header,
+  .footer {
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+  .site-header {
+    height: 85px;
+  }
+  .nav {
+    gap: 18px;
+    font-size: 0.75rem;
+  }
+  .wordmark {
+    font-size: 1rem;
+  }
+  .wordmark span {
+    font-size: 0.56rem;
+  }
+  .hero {
+    padding-top: 45px;
+  }
+  .hero-bottom {
+    display: block;
+  }
+  .hero-bottom p {
+    margin-bottom: 24px;
+  }
+  .hero-strip {
+    gap: 17px;
+    flex-wrap: wrap;
+    font-size: 0.62rem;
+  }
+  .footer {
+    flex-wrap: wrap;
+  }
+  .hero h1 {
+    font-size: clamp(2.6rem, 7.5vw, 4rem);
+  }
+}
+@media (max-width: 450px) {
+  .nav a:first-child {
+    display: none;
+  }
+}
