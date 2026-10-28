@@ -5,7 +5,7 @@ import typescript from 'shiki/langs/typescript.mjs';
 import javascript from 'shiki/langs/javascript.mjs';
 import json from 'shiki/langs/json.mjs';
 import darkPlus from 'shiki/themes/dark-plus.mjs';
-import type { HighlightedCode } from '../src/ui/code-types.ts';
+import type { HighlightedCode } from '../src/features/architecture-lab/code/code-types.ts';
 
 export const codeBackground = '#142733';
 

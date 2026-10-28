@@ -1,18 +1,30 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { assertBoundaryCoverage } from './architecture-coverage.ts';
 import { deriveCyclePath } from './cycle-path.ts';
 import { createCodeHighlighter } from './highlight.ts';
 const scenarios = [
-  { id: 'valid', root: 'src', expectedRules: [] },
+  {
+    id: 'valid',
+    scanRoot: 'src',
+    boundaryRoot: 'src/features/orders',
+    expectedRules: [],
+  },
   {
     id: 'domain-to-ui',
-    root: 'fixtures/domain-to-ui/src',
+    scanRoot: 'fixtures/domain-to-ui/src',
+    boundaryRoot: 'fixtures/domain-to-ui/src',
     expectedRules: ['no-domain-outward'],
   },
-  { id: 'cycle', root: 'fixtures/cycle/src', expectedRules: ['no-circular'] },
+  {
+    id: 'cycle',
+    scanRoot: 'fixtures/cycle/src',
+    boundaryRoot: 'fixtures/cycle/src',
+    expectedRules: ['no-circular'],
+  },
 ];
-const results = scenarios.map(({ id, root, expectedRules }) => {
+const results = scenarios.map(({ id, scanRoot, boundaryRoot, expectedRules }) => {
   const reportRun = spawnSync(
     process.execPath,
     [
@@ -21,9 +33,9 @@ const results = scenarios.map(({ id, root, expectedRules }) => {
       '.dependency-cruiser.cjs',
       '--output-type',
       'json',
-      root,
+      scanRoot,
     ],
-    { encoding: 'utf8', env: { ...process.env, DEPENDENCY_ROOT: root } },
+    { encoding: 'utf8', env: { ...process.env, DEPENDENCY_BOUNDARY_ROOT: boundaryRoot } },
   );
   if (reportRun.error) {
     throw reportRun.error;
@@ -42,9 +54,9 @@ const results = scenarios.map(({ id, root, expectedRules }) => {
       '.dependency-cruiser.cjs',
       '--output-type',
       'err',
-      root,
+      scanRoot,
     ],
-    { encoding: 'utf8', env: { ...process.env, DEPENDENCY_ROOT: root } },
+    { encoding: 'utf8', env: { ...process.env, DEPENDENCY_BOUNDARY_ROOT: boundaryRoot } },
   );
   if (run.error) {
     throw run.error;
@@ -59,6 +71,9 @@ const results = scenarios.map(({ id, root, expectedRules }) => {
   } catch {
     throw new Error(`Invalid report for ${id}: ${reportRun.stderr}`);
   }
+  if (id === 'valid') {
+    assertBoundaryCoverage(report.modules, boundaryRoot);
+  }
   const violations = report.summary.violations;
   const actualRules = [...new Set(violations.map((item) => item.rule.name))].sort();
   assert.deepEqual(actualRules, expectedRules, `Unexpected rules for ${id}`);
@@ -69,14 +84,22 @@ const results = scenarios.map(({ id, root, expectedRules }) => {
   );
   if (id === 'domain-to-ui') {
     assert.equal(violations.length, 1);
-    assert.equal(violations[0].from, `${root}/domain/order.ts`);
-    assert.equal(violations[0].to, `${root}/ui/toast.ts`);
+    assert.equal(violations[0].from, `${boundaryRoot}/domain/order.ts`);
+    assert.equal(violations[0].to, `${boundaryRoot}/ui/toast.ts`);
   }
   if (id === 'cycle') {
     assert.ok(violations.length > 0);
     for (const violation of violations) {
-      assert.ok([`${root}/domain/a.ts`, `${root}/domain/b.ts`].includes(violation.from));
-      assert.ok([`${root}/domain/a.ts`, `${root}/domain/b.ts`].includes(violation.to));
+      assert.ok(
+        [`${boundaryRoot}/domain/a.ts`, `${boundaryRoot}/domain/b.ts`].includes(
+          violation.from,
+        ),
+      );
+      assert.ok(
+        [`${boundaryRoot}/domain/a.ts`, `${boundaryRoot}/domain/b.ts`].includes(
+          violation.to,
+        ),
+      );
       assert.ok(violation.cycle.length >= 2);
     }
   }
@@ -97,8 +120,8 @@ const results = scenarios.map(({ id, root, expectedRules }) => {
 });
 const snippets = Object.fromEntries(
   [
-    'src/application/create-order.ts',
-    'src/domain/order.ts',
+    'src/features/orders/application/create-order.ts',
+    'src/features/orders/domain/order.ts',
     'fixtures/domain-to-ui/src/domain/order.ts',
     '.dependency-cruiser.cjs',
     'fixtures/cycle/src/domain/a.ts',
