@@ -25,6 +25,10 @@ pnpm preview  # servir el build estático
 
 ## La decisión y el código
 
+El árbol comienza por lo que hace esta POC: `features/orders` contiene el pedido y `features/architecture-lab` su explicación y evidencia. Las capas de dominio, aplicación e infraestructura viven dentro de pedidos; no organizan toda la web. `app` solo compone el sitio y conecta los adaptadores.
+
+Cada componente posee su CSS Module. El estado y envío del formulario viven en `useOrderDemo`; la carga y cancelación HTTP, en `useEvidence`. La selección de ejemplos sigue siendo estado local del explorador. No hay una carpeta genérica de componentes comunes ni nuevas dependencias de estado.
+
 - **Dominio**: valida líneas y calcula importes en centavos enteros. No depende de otras capas ni paquetes externos.
 - **Aplicación**: coordina el caso de uso y define el puerto `OrderRepository`. No importa adaptadores.
 - **Infraestructura**: implementa ese puerto con un mapa en memoria. Copia los objetos para no exponer su estado interno.
@@ -49,15 +53,17 @@ Este comando ejecuta dependency-cruiser sobre la aplicación y sobre dos fixture
 | Dominio importando una notificación de UI       | `no-domain-outward`; exit code 1 |
 | Dos módulos de dominio que se importan entre sí | `no-circular`; exit code 1       |
 
-También se prohíben imports de aplicación hacia infraestructura/UI, de UI hacia infraestructura y dependencias no resueltas. Los imports de tipos cuentan: las dependencias arquitectónicas no desaparecen porque TypeScript las borre al compilar.
+El análisis productivo recorre todo `src`, pero las reglas de capas apuntan a `src/features/orders`. Los tests co-localizados no entran en ese grafo. El build comprueba que haya módulos reales en las cuatro capas; una prueba adicional inyecta un import inválido en una copia temporal del dominio productivo y exige detectar la arista exacta. Así, mover carpetas no puede dejar reglas sin coincidencias con un resultado falsamente verde.
+
+La aplicación solo puede importar su propia capa y el dominio: tampoco puede depender del shell ni de la guía didáctica, incluidos los imports de tipos. Se prohíben imports de UI hacia infraestructura y dependencias no resueltas. Los imports de tipos cuentan: las dependencias arquitectónicas no desaparecen porque TypeScript las borre al compilar.
 
 En el caso circular, la página muestra los dos archivos reales: `a.ts` importa `b.ts` y `b.ts` importa `a.ts`. Los imports entre módulos de dominio están permitidos; la infracción es cerrar un ciclo. El recorrido se obtiene del campo `cycle` del analizador y el build comprueba que cada arista exista en su grafo. `no-circular` es el nombre de la regla «No permitir ciclos», no un booleano. El informe normalizado queda disponible en un desplegable.
 
-Los fixtures no se importan desde la aplicación y no entran en el bundle. Para probar un cambio real, introduce temporalmente un import de `src/domain/` hacia `src/ui/` y ejecuta `pnpm architecture`: el escenario válido deberá fallar. Revierte el cambio antes de continuar.
+Los fixtures no se importan desde la aplicación y no entran en el bundle. Para probar un cambio real, introduce temporalmente un import de `src/features/orders/domain/` hacia `src/features/orders/ui/` y ejecuta `pnpm architecture`: el escenario válido deberá fallar. Revierte el cambio antes de continuar.
 
 El build genera `public/evidence.json` leyendo los informes reales y fragmentos del código. La página muestra ese resultado, incluida su fecha UTC. **No es un analizador online ni un indicador del último CI**; el enlace a Actions permite consultar las ejecuciones. No se versiona la evidencia generada.
 
-Los fragmentos y la configuración se colorean con Shiki durante el build, usando las gramáticas de TypeScript, JavaScript y JSON y el tema Dark+. Los tokens se renderizan como texto de React, no como HTML inyectado; cada bloque conserva el contenido original, incluidos espacios y saltos de línea. Los colores con contraste inferior a 4,5:1 se aclaran sobre el fondo real del bloque. El navegador descarga tokens adicionales en el JSON, pero no un motor de resaltado, gramáticas ni WASM. El ejemplo circular sigue mostrando el informe JSON real del análisis. La evidencia se revalida al cargar la página. Si llega una versión de la evidencia sin tokens —por ejemplo, desde caché— o estos no corresponden al texto original, el bloque muestra ese texto sin color en lugar de fallar.
+Los fragmentos y la configuración se colorean con Shiki durante el build, usando las gramáticas de TypeScript, JavaScript y JSON y el tema Dark+. Los tokens se renderizan como texto de React, no como HTML inyectado; cada bloque conserva el contenido original, incluidos espacios y saltos de línea. Los colores con contraste inferior a 4,5:1 se aclaran sobre el fondo real del bloque. El navegador descarga tokens adicionales en el JSON, pero no un motor de resaltado, gramáticas ni WASM. El ejemplo circular muestra sus dos fuentes reales y permite consultar el informe normalizado del análisis. La evidencia se revalida al cargar la página. Si llega una versión de la evidencia sin tokens —por ejemplo, desde caché— o estos no corresponden al texto original, el bloque muestra ese texto sin color en lugar de fallar.
 
 ## Pruebas
 
@@ -88,7 +94,7 @@ Dependency-cruiser comprueba dependencias estáticas y reglas elegidas. No detec
 ## Referencias
 
 - [dependency-cruiser: reglas](https://github.com/sverweij/dependency-cruiser/blob/main/doc/rules-reference.md)
-- [Código del caso de uso](src/application/create-order.ts)
+- [Código del caso de uso](src/features/orders/application/create-order.ts)
 - [Mensaje de ejemplo para LinkedIn](docs/linkedin-post.md)
 
 ## Licencia
