@@ -5033,9 +5033,12 @@
 
 
         <!-- Connection paths (before components for correct z-order) -->
-        <path data-edge-from="ui" data-edge-to="application" data-edge-label="importa" data-edge-key="0" data-composition-points="300,145;460,145" d="M 300 145 L 460 145" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="ui" data-edge-to="application" data-edge-label="importa" data-edge-key="0" data-composition-points="300,138;460,138" d="M 300 138 L 460 138" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="application" data-edge-to="domain" data-edge-label="importa" data-edge-key="1" data-composition-points="700,145;860,145" d="M 700 145 L 860 145" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="infrastructure" data-edge-to="application" data-edge-label="importa el puerto" data-edge-key="2" data-composition-points="580,400;580,190" d="M 580 400 L 580 190" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="composition" data-edge-to="ui" data-edge-label="importa servicios UI" data-edge-key="3" data-composition-points="180,400;180,190" d="M 180 400 L 180 190" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="composition" data-edge-to="infrastructure" data-edge-label="elige adaptador" data-edge-key="4" data-composition-points="300,452;460,452" d="M 300 452 L 460 452" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="composition" data-edge-to="application" data-edge-label="importa casos de uso" data-edge-key="5" data-composition-points="300,438;380,438;380,152;460,152" d="M 300 438 L 372 438 Q 380 438 380 430 L 380 160 Q 380 152 388 152 L 460 152" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
 
         <!-- Components -->
         <g id="node-ui" data-node-id="ui" data-node-label="Interfaz React" tabindex="0" role="button" aria-label="Focus Interfaz React, Formulario y estado visual, Architecture component" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Formulario y estado visual" data-node-context="Architecture component">
@@ -5052,15 +5055,15 @@
         <text data-detail="context" x="180" y="159" class="t-muted" font-size="9" text-anchor="middle">Formulario y estado visual</text>
         </g>
 
-        <g id="node-application" data-node-id="application" data-node-label="Aplicación" tabindex="0" role="button" aria-label="Focus Aplicación, Caso de uso y puerto, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Caso de uso y puerto" data-node-context="Architecture component">
-          <title>Aplicación · Caso de uso y puerto · Architecture component</title>
+        <g id="node-application" data-node-id="application" data-node-label="Aplicación" tabindex="0" role="button" aria-label="Focus Aplicación, Casos de uso y puertos, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Casos de uso y puertos" data-node-context="Architecture component">
+          <title>Aplicación · Casos de uso y puertos · Architecture component</title>
           <rect x="460" y="100" width="240" height="90" rx="6" class="c-mask"/>
           <rect x="460" y="100" width="240" height="90" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(466 106) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="580" y="143" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Aplicación</text>
-        <text data-detail="context" x="580" y="159" class="t-muted" font-size="9" text-anchor="middle">Caso de uso y puerto</text>
+        <text data-detail="context" x="580" y="159" class="t-muted" font-size="9" text-anchor="middle">Casos de uso y puertos</text>
         </g>
 
         <g id="node-domain" data-node-id="domain" data-node-label="Dominio" tabindex="0" role="button" aria-label="Focus Dominio, Pedido y reglas puras, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Pedido y reglas puras" data-node-context="Architecture component">
@@ -5074,8 +5077,8 @@
         <text data-detail="context" x="980" y="159" class="t-muted" font-size="9" text-anchor="middle">Pedido y reglas puras</text>
         </g>
 
-        <g id="node-infrastructure" data-node-id="infrastructure" data-node-label="Infraestructura" tabindex="0" role="button" aria-label="Focus Infraestructura, Repositorio en memoria, Architecture component" aria-pressed="false" data-node-kind="database" data-node-sublabel="Repositorio en memoria" data-node-context="Architecture component">
-          <title>Infraestructura · Repositorio en memoria · Architecture component</title>
+        <g id="node-infrastructure" data-node-id="infrastructure" data-node-label="Infraestructura" tabindex="0" role="button" aria-label="Focus Infraestructura, localStorage / memoria, Architecture component" aria-pressed="false" data-node-kind="database" data-node-sublabel="localStorage / memoria" data-node-context="Architecture component">
+          <title>Infraestructura · localStorage / memoria · Architecture component</title>
           <rect x="460" y="400" width="240" height="90" rx="6" class="c-mask"/>
           <rect x="460" y="400" width="240" height="90" rx="6" class="c-database" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(466 406) scale(0.6875)">
@@ -5083,13 +5086,24 @@
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="580" y="443" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Infraestructura</text>
-        <text data-detail="context" x="580" y="459" class="t-muted" font-size="9" text-anchor="middle">Repositorio en memoria</text>
+        <text data-detail="context" x="580" y="459" class="t-muted" font-size="9" text-anchor="middle">localStorage / memoria</text>
+        </g>
+
+        <g id="node-composition" data-node-id="composition" data-node-label="Composición" tabindex="0" role="button" aria-label="Focus Composición, Conecta servicios y adaptador, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Conecta servicios y adaptador" data-node-context="Architecture component">
+          <title>Composición · Conecta servicios y adaptador · Architecture component</title>
+          <rect x="60" y="400" width="240" height="90" rx="6" class="c-mask"/>
+          <rect x="60" y="400" width="240" height="90" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(66 406) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="180" y="443" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Composición</text>
+        <text data-detail="context" x="180" y="459" class="t-muted" font-size="9" text-anchor="middle">Conecta servicios y adaptador</text>
         </g>
 
         <!-- Connection labels -->
         <g data-detail="context" data-edge-from="ui" data-edge-to="application" data-edge-label="importa" data-edge-key="0">
-          <rect x="358.2" y="125" width="43.6" height="14" rx="3" class="c-mask"/>
-          <text x="380" y="135" class="t-backend" font-size="8" text-anchor="middle">importa</text>
+          <rect x="358.2" y="118" width="43.6" height="14" rx="3" class="c-mask"/>
+          <text x="380" y="128" class="t-backend" font-size="8" text-anchor="middle">importa</text>
         </g>
         <g data-detail="context" data-edge-from="application" data-edge-to="domain" data-edge-label="importa" data-edge-key="1">
           <rect x="758.2" y="125" width="43.6" height="14" rx="3" class="c-mask"/>
@@ -5098,6 +5112,18 @@
         <g data-detail="context" data-edge-from="infrastructure" data-edge-to="application" data-edge-label="importa el puerto" data-edge-key="2">
           <rect x="534.2" y="380" width="91.6" height="14" rx="3" class="c-mask"/>
           <text x="580" y="390" class="t-messagebus" font-size="8" text-anchor="middle">importa el puerto</text>
+        </g>
+        <g data-detail="context" data-edge-from="composition" data-edge-to="ui" data-edge-label="importa servicios UI" data-edge-key="3">
+          <rect x="127" y="380" width="106" height="14" rx="3" class="c-mask"/>
+          <text x="180" y="390" class="t-messagebus" font-size="8" text-anchor="middle">importa servicios UI</text>
+        </g>
+        <g data-detail="context" data-edge-from="composition" data-edge-to="infrastructure" data-edge-label="elige adaptador" data-edge-key="4">
+          <rect x="339" y="460" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="380" y="470" class="t-backend" font-size="8" text-anchor="middle">elige adaptador</text>
+        </g>
+        <g data-detail="context" data-edge-from="composition" data-edge-to="application" data-edge-label="importa casos de uso" data-edge-key="5">
+          <rect x="327" y="275" width="106" height="14" rx="3" class="c-mask"/>
+          <text x="380" y="285" class="t-messagebus" font-size="8" text-anchor="middle">importa casos de uso</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
@@ -5114,9 +5140,9 @@
             <rect x="145" y="533" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
             <text x="167" y="542" class="t-muted" font-size="10" font-weight="500">Módulo lógico</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Adaptador en memoria" data-legend-x="275" data-legend-baseline="542" data-legend-width="143">
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Adaptadores locales" data-legend-x="275" data-legend-baseline="542" data-legend-width="138">
             <rect x="275" y="533" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="297" y="542" class="t-muted" font-size="10" font-weight="500">Adaptador en memoria</text>
+            <text x="297" y="542" class="t-muted" font-size="10" font-weight="500">Adaptadores locales</text>
           </g>
         </g>
       </svg>
@@ -5308,33 +5334,33 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Dirección elegida</h3>
+          <h3>Imports, no llamadas</h3>
         </div>
         <ul>
-          <li>&bull; Las flechas representan imports estáticos.</li>
-          <li>&bull; El dominio no importa las otras capas.</li>
+          <li>&bull; El dominio conserva reglas puras.</li>
+          <li>&bull; Aplicación conoce puertos, no localStorage.</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot emerald"></div>
-          <h3>Composición</h3>
+          <h3>Una decisión sustituible</h3>
         </div>
         <ul>
-          <li>&bull; La raíz conecta el caso de uso con el adaptador.</li>
-          <li>&bull; El puerto permite sustituir la persistencia.</li>
+          <li>&bull; La composición inyecta el almacenamiento.</li>
+          <li>&bull; La demo usa localStorage; las pruebas, memoria.</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot amber"></div>
-          <h3>Límite de la herramienta</h3>
+          <h3>Límite de esta POC</h3>
         </div>
         <ul>
-          <li>&bull; Comprueba reglas, no calidad del diseño.</li>
-          <li>&bull; Esta demo no tiene servidor ni persistencia durable.</li>
+          <li>&bull; Historial local a este navegador y origen.</li>
+          <li>&bull; Sin servidor ni sincronización entre pestañas.</li>
         </ul>
       </div>
     </div>
