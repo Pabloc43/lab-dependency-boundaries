@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react';
 import { useOrderDemo, type OrderDemoServices } from './useOrderDemo';
+import { OrderHistory } from './OrderHistory';
 import styles from './OrderDemo.module.css';
 
 const money = (cents: number) =>
@@ -11,6 +12,7 @@ export function OrderDemo(services: OrderDemoServices) {
   const { catalog } = services;
   const {
     quantities,
+    dismissOrder,
     changeQuantity,
     pending,
     order,
@@ -20,7 +22,7 @@ export function OrderDemo(services: OrderDemoServices) {
     submit,
   } = useOrderDemo(services);
   const message = order
-    ? `Pedido creado por ${money(order.totalCents)}. ${order.lines.length} productos distintos guardados en memoria.`
+    ? `Pedido creado por ${money(order.totalCents)}. ${order.lines.length} productos distintos guardados en este navegador.`
     : '';
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,12 +42,12 @@ export function OrderDemo(services: OrderDemoServices) {
           recoge cantidades y muestra el resultado.
         </p>
         <p>
-          El almacenamiento es un adaptador en memoria. Cambiarlo no debería obligarnos a
+          El almacenamiento es un adaptador localStorage. Sustituirlo no obliga a
           modificar el cálculo ni introducir React en las reglas de negocio.
         </p>
         <aside className={styles['margin-note']}>
-          No es una tienda: no hay pagos, inventario ni persistencia. La aplicación existe
-          para poner una decisión a prueba.
+          No es una tienda: no hay pagos, inventario ni servidor. La persistencia es local
+          y la aplicación existe para poner una decisión a prueba.
         </aside>
       </div>
       <div className={styles['demo-card']}>
@@ -98,7 +100,8 @@ export function OrderDemo(services: OrderDemoServices) {
           </button>
           <p className={styles['form-note']}>
             Cantidad 0 elimina el producto. Las cantidades elegidas deben ser enteros de 1
-            a 20. Los pedidos desaparecen al recargar.
+            a 20. Los pedidos se conservan en este navegador; el formulario se reinicia al
+            recargar.
           </p>
           <div
             aria-live="polite"
@@ -113,6 +116,7 @@ export function OrderDemo(services: OrderDemoServices) {
             </p>
           ) : null}
         </form>
+        <OrderHistory services={services} saved={order} onCleared={dismissOrder} />
       </div>
     </section>
   );

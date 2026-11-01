@@ -1,0 +1,49 @@
+.history {
+  border-top: 1px solid #d6d8d0;
+  margin-top: 26px;
+  padding-top: 24px;
+}
+.history h3 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+.history p {
+  font-size: 0.8rem;
+}
+.orders {
+  padding-left: 22px;
+  max-height: 330px;
+  overflow: auto;
+}
+.orders > li {
+  padding: 12px 0;
+  border-bottom: 1px solid #e3e5de;
+}
+.orders ul {
+  padding-left: 18px;
+  font-size: 0.8rem;
+}
+.orders small {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #53635c;
+  font-size: 0.7rem;
+}
+.clear {
+  background: transparent;
+  border: 1px solid #637477;
+  border-radius: 3px;
+  color: #1b303b;
+  padding: 10px 14px;
+}
+.clear:disabled {
+  opacity: 0.6;
+}
+.error {
+  color: #8c351b;
+  background: #fae8df;
+  padding: 12px;
+}
+.note {
+  color: #53635c;
+}

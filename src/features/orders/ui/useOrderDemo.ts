@@ -6,6 +6,8 @@ export interface OrderDemoServices {
   catalog: readonly Product[];
   submitOrder: ReturnType<typeof createOrder>;
   simulateFailure: () => void;
+  listOrders: () => Promise<readonly Order[]>;
+  clearOrders: () => Promise<void>;
 }
 
 export function useOrderDemo({
@@ -49,7 +51,11 @@ export function useOrderDemo({
       setError(
         cause instanceof OrderValidationError
           ? cause.message
-          : 'No se pudo guardar el pedido. La falla es simulada; puedes volver a intentarlo.',
+          : cause instanceof Error
+            ? cause.message.startsWith('No se pudo')
+              ? cause.message
+              : `No se pudo guardar el pedido. ${cause.message}`
+            : 'No se pudo guardar el pedido. Intenta nuevamente.',
       );
     } finally {
       setPending(false);
@@ -58,6 +64,7 @@ export function useOrderDemo({
   }
   return {
     quantities,
+    dismissOrder: () => setOrder(null),
     changeQuantity,
     pending,
     order,
