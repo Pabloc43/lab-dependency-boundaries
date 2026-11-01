@@ -22,9 +22,9 @@ export function PersistenceExample({ evidence }: { evidence: Evidence }) {
       <h3>Guardar funciona. El acoplamiento sigue siendo un problema.</h3>
       <p>
         Las dos variantes guardan, recuperan y borran el mismo pedido. La primera importa
-        localStorage desde aplicación; cambiar el almacenamiento obliga a modificar el
-        caso de uso. La segunda recibe un repositorio: la raíz de composición elige el
-        adaptador.
+        y construye el adaptador de localStorage desde aplicación; cambiar el
+        almacenamiento obliga a modificar el caso de uso. La segunda recibe un
+        repositorio: la raíz de composición elige el adaptador.
       </p>
       <p>
         La regla <code>no-application-outward</code> rechaza el import directo de
