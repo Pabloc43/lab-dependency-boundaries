@@ -408,3 +408,258 @@ test('shows the actual historical source key when an older cached build is serve
     page.getByRole('region', { name: 'Código del ejemplo seleccionado', exact: true }),
   ).toContainText('export function createOrder');
 });
+
+test('restores multiple orders after reload and clears only its own storage key', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await page.evaluate(() => localStorage.setItem('unrelated-lab-sentinel', 'keep'));
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await page.getByLabel('Cantidad de Cuaderno de taller').fill('2');
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  const history = page.getByRole('region', {
+    name: 'Historial de este navegador',
+    exact: true,
+  });
+  await expect(history.locator('ol > li')).toHaveCount(2);
+  await expect(history.locator('ol > li').first()).toContainText('32,00');
+  await page.reload();
+  await expect(history.locator('ol > li')).toHaveCount(2);
+  await expect(page.getByLabel('Cantidad de Cuaderno de taller')).toHaveValue('1');
+  await history.getByRole('button', { name: 'Borrar historial de este lab' }).click();
+  await expect(history.getByText('No hay pedidos guardados.')).toBeVisible();
+  await page.reload();
+  await expect(history.getByText('No hay pedidos guardados.')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('unrelated-lab-sentinel'))).toBe(
+    'keep',
+  );
+});
+
+test('reports incompatible storage without overwriting it and allows explicit reset', async ({
+  page,
+}) => {
+  await page.addInitScript(
+    () =>
+      window === window.top &&
+      localStorage.setItem(
+        'lab-dependency-boundaries:orders:v1',
+        '{"version":99,"orders":[]}',
+      ),
+  );
+  await page.goto('./');
+  const history = page.getByRole('region', {
+    name: 'Historial de este navegador',
+    exact: true,
+  });
+  await expect(history.getByRole('alert')).toContainText('incompatibles');
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Pedido creado' })).toHaveCount(
+    0,
+  );
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem('lab-dependency-boundaries:orders:v1'),
+    ),
+  ).toBe('{"version":99,"orders":[]}');
+  await history.getByRole('button', { name: 'Borrar historial de este lab' }).click();
+  await expect(history.getByText('No hay pedidos guardados.')).toBeVisible();
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(history.locator('ol > li')).toHaveCount(1);
+});
+
+test('handles blocked storage access and quota without false success', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get: () => {
+        throw new DOMException('Blocked', 'SecurityError');
+      },
+    });
+  });
+  await page.goto('./');
+  await expect(page.getByRole('heading', { name: 'Mesa de pedidos' })).toBeVisible();
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Pedido creado' })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole('region', { name: 'Historial de este navegador' }).getByRole('alert'),
+  ).toContainText('bloqueado');
+});
+
+test('does not leak a simulated failure after validation and recovers from write failure', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await page.getByLabel('Simular una falla al guardar').check();
+  await page.getByLabel('Cantidad de Cuaderno de taller').fill('1.5');
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('entero');
+  await page.getByLabel('Cantidad de Cuaderno de taller').fill('1');
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  const history = page.getByRole('region', { name: 'Historial de este navegador' });
+  await expect(history.locator('ol > li')).toHaveCount(1);
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      Storage.prototype.setItem = original;
+      throw new DOMException(`${key}:${value}`, 'QuotaExceededError');
+    };
+  });
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('espacio');
+  await expect(page.getByRole('status').filter({ hasText: 'Pedido creado' })).toHaveCount(
+    0,
+  );
+  await expect(history.locator('ol > li')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(history.locator('ol > li')).toHaveCount(2);
+});
+
+test('shows real coupled and injected sources with functional provenance and exact rules', async ({
+  page,
+}) => {
+  const response = await page.request.get(
+    'http://127.0.0.1:4173/lab-dependency-boundaries/evidence.json',
+  );
+  const evidence = await response.json();
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Persistencia acoplada', exact: true }).click();
+  for (const [id, path] of [
+    [
+      'persistence-coupling',
+      'fixtures/persistence-coupling/src/application/create-order.ts',
+    ],
+    ['persistence-injected', 'src/features/orders/application/create-order.ts'],
+  ]) {
+    const block = page.getByRole('region', {
+      name: `Código de persistencia: ${id}`,
+      exact: true,
+    });
+    expect(await block.locator('code').textContent()).toBe(evidence.snippets[path]);
+    expect(
+      await block
+        .locator('span')
+        .evaluateAll(
+          (tokens) => new Set(tokens.map((token) => getComputedStyle(token).color)).size,
+        ),
+    ).toBeGreaterThan(1);
+    expect(
+      evidence.results.find((item: { id: string }) => item.id === id).verification
+        .saveRecoverClear,
+    ).toBe(true);
+  }
+  await expect(
+    page.locator('strong').filter({ hasText: /^no-application-outward$/ }),
+  ).toHaveCount(1);
+  await expect(page.getByText('SIN INFRACCIONES', { exact: true })).toBeVisible();
+  await loadDiagrams(page);
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('keeps save success distinct from a subsequent history read failure', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await expect(
+    page.getByText('No hay pedidos guardados.', { exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() => {
+    const originalRead = Storage.prototype.getItem;
+    const originalWrite = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      originalWrite.call(this, key, value);
+      Storage.prototype.getItem = function (readKey) {
+        if (readKey === 'lab-dependency-boundaries:orders:v1') {
+          throw new DOMException('Read failed', 'SecurityError');
+        }
+        return originalRead.call(this, readKey);
+      };
+    };
+  });
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Pedido creado' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Historial de este navegador' }).getByRole('alert'),
+  ).toContainText('leer');
+});
+
+test('clears stale success messages and reports a real clear failure', async ({
+  page,
+}) => {
+  await page.goto('./');
+  const history = page.getByRole('region', { name: 'Historial de este navegador' });
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(history.locator('ol > li')).toHaveCount(1);
+  await page.evaluate(() => {
+    const original = Storage.prototype.removeItem;
+    Storage.prototype.removeItem = function (key) {
+      Storage.prototype.removeItem = original;
+      throw new DOMException(key, 'SecurityError');
+    };
+  });
+  await history.getByRole('button', { name: 'Borrar historial de este lab' }).click();
+  await expect(history.getByRole('alert')).toContainText('borrar');
+  await expect(history.locator('ol > li')).toHaveCount(1);
+  await history.getByRole('button', { name: 'Borrar historial de este lab' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Pedido creado' })).toHaveCount(
+    0,
+  );
+  await expect(history.getByRole('status').filter({ hasText: 'Se borró' })).toBeVisible();
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(history.locator('ol > li')).toHaveCount(1);
+  await expect(history.getByRole('status').filter({ hasText: 'Se borró' })).toHaveCount(
+    0,
+  );
+  await page.getByLabel('Simular una falla al guardar').check();
+  await page.getByRole('button', { name: 'Crear pedido', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('simulada');
+  await expect(history.locator('ol > li')).toHaveCount(1);
+  await expect(history.getByRole('status').filter({ hasText: 'Se borró' })).toHaveCount(
+    0,
+  );
+});
+
+test('keeps the persistence explanation usable with evidence from an older build', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.route('**/evidence.json', async (route) => {
+    const response = await route.fetch();
+    const evidence = await response.json();
+    evidence.results = evidence.results.filter(
+      (item: { id: string }) => !item.id.startsWith('persistence-'),
+    );
+    delete evidence.snippets[
+      'fixtures/persistence-coupling/src/application/create-order.ts'
+    ];
+    delete evidence.snippets['src/features/orders/application/order-repository.ts'];
+    delete evidence.snippets[
+      'src/features/orders/infrastructure/local-storage-order-repository.ts'
+    ];
+    await route.fulfill({ response, json: evidence });
+  });
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Persistencia acoplada', exact: true }).click();
+  await expect(
+    page.getByText(
+      'Esta versión de la evidencia no incluye el informe de esta variante.',
+      { exact: true },
+    ),
+  ).toHaveCount(2);
+  await expect(
+    page.getByText(
+      'Esta versión de la evidencia no incluye el código de esta variante.',
+      { exact: true },
+    ),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});
