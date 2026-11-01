@@ -1,54 +1,18 @@
-import type { OrderHistoryRepository } from '../application/order-repository';
+import {
+  OrderRepositoryError,
+  type OrderHistoryRepository,
+} from '../application/order-repository';
+import { decodeOrderDocument, isStoredOrder } from './order-storage-codec';
 import type { Order } from '../domain/order';
 
 export const ORDER_STORAGE_KEY = 'lab-dependency-boundaries:orders:v1';
 export type OrderStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
-export class OrderStorageError extends Error {
+export class OrderStorageError extends OrderRepositoryError {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'OrderStorageError';
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isOrder(value: unknown): value is Order {
-  if (
-    !isRecord(value) ||
-    typeof value.id !== 'string' ||
-    !value.id.trim() ||
-    !Array.isArray(value.lines) ||
-    value.lines.length === 0 ||
-    !Number.isSafeInteger(value.totalCents) ||
-    (value.totalCents as number) < 0
-  ) {
-    return false;
-  }
-  const seen = new Set<string>();
-  let total = 0;
-  for (const line of value.lines) {
-    if (
-      !isRecord(line) ||
-      typeof line.productId !== 'string' ||
-      !line.productId.trim() ||
-      typeof line.name !== 'string' ||
-      !line.name.trim() ||
-      seen.has(line.productId) ||
-      !Number.isSafeInteger(line.quantity) ||
-      (line.quantity as number) < 1 ||
-      (line.quantity as number) > 20 ||
-      !Number.isSafeInteger(line.unitPriceCents) ||
-      (line.unitPriceCents as number) < 0
-    ) {
-      return false;
-    }
-    seen.add(line.productId);
-    total += (line.quantity as number) * (line.unitPriceCents as number);
-  }
-  return Number.isSafeInteger(total) && total === value.totalCents;
 }
 
 // Resolve storage lazily: even accessing window.localStorage can throw.
@@ -61,17 +25,7 @@ export class LocalStorageOrderRepository implements OrderHistoryRepository {
       if (raw === null) {
         return [];
       }
-      const document: unknown = JSON.parse(raw);
-      if (
-        !isRecord(document) ||
-        document.version !== 1 ||
-        !Array.isArray(document.orders) ||
-        !document.orders.every(isOrder) ||
-        new Set(document.orders.map((order) => order.id)).size !== document.orders.length
-      ) {
-        throw new Error('Invalid order document');
-      }
-      return structuredClone(document.orders);
+      return structuredClone(decodeOrderDocument(raw));
     } catch (cause) {
       throw new OrderStorageError(
         'No se pudo leer el historial local. El almacenamiento puede estar bloqueado o contener datos incompatibles. Puedes borrar solo los datos de este lab para restablecerlo.',
@@ -81,7 +35,7 @@ export class LocalStorageOrderRepository implements OrderHistoryRepository {
   }
 
   async save(order: Order): Promise<void> {
-    if (!isOrder(order)) {
+    if (!isStoredOrder(order)) {
       throw new OrderStorageError('El pedido no tiene un formato válido.');
     }
     // Read first: do not silently overwrite a malformed or unknown document.
