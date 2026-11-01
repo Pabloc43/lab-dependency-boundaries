@@ -1,6 +1,6 @@
-import type { OrderRepository } from '../application/create-order';
+import type { OrderHistoryRepository } from '../application/order-repository';
 import type { Order } from '../domain/order';
-export class MemoryOrderRepository implements OrderRepository {
+export class MemoryOrderRepository implements OrderHistoryRepository {
   private readonly orders = new Map<string, Order>();
   private failNext = false;
   simulateNextFailure(): void {
@@ -11,8 +11,14 @@ export class MemoryOrderRepository implements OrderRepository {
       this.failNext = false;
       throw new Error('Simulated repository failure');
     }
-    // Store a copy so callers cannot mutate persisted state through a reference.
+    this.orders.delete(order.id);
     this.orders.set(order.id, structuredClone(order));
+  }
+  async list(): Promise<readonly Order[]> {
+    return structuredClone([...this.orders.values()].reverse());
+  }
+  async clear(): Promise<void> {
+    this.orders.clear();
   }
   find(id: string): Order | undefined {
     const order = this.orders.get(id);
