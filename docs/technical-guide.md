@@ -116,6 +116,25 @@ Los fragmentos y la configuración se colorean con Shiki durante el build, usand
 
 Playwright verifica el pedido en escritorio y móvil, errores visibles, la navegación inicial por teclado, los informes, el ancho de página y un análisis automático de accesibilidad con axe. Esa comprobación no reemplaza una revisión manual de accesibilidad.
 
+## Informe HTML del CI
+
+`pnpm architecture:report` analiza **solo el código productivo de `src`**, con los mismos límites de pedidos y exclusiones de tests que la comprobación existente. Ejecuta una sola vez el analizador JSON y reutiliza ese resultado con los formatters nativos `depcruise-fmt -T err --exit-code` y `depcruise-fmt -T err-html`. No hay un renderer HTML propio ni dependencias nuevas.
+
+El comando regenera `reports/architecture/` (ignorado por Git):
+
+- `architecture.html`: informe HTML nativo para abrir en el navegador.
+- `architecture.json`: informe original del analizador.
+- `architecture.txt`: salida del formatter de consola.
+- `summary.md`: alcance, SHA disponible, versión, estado y conteo de infracciones.
+
+En **Actions → ejecución → Artifacts**, descarga **architecture-report** y descomprime el ZIP antes de abrir el HTML. El artifact se conserva **14 días** y su enlace requiere acceso a GitHub. El resumen de la ejecución incluye el resultado y el enlace de descarga. Estos archivos no se publican en GitHub Pages ni forman parte de `dist`.
+
+Tras una instalación correcta, el workflow intenta generar y adjuntar el informe aunque fallen tipos, tests, límites o E2E; no lo hace si la ejecución fue cancelada. Un reporte sin errores de dependencias **no significa que el CI completo haya pasado**. Los permisos del workflow no cambian.
+
+Encontrar infracciones reales genera HTML y un resumen de error, pero el comando diagnóstico termina con `0` si pudo analizar y formatear correctamente. La salida nativa `0`/`1` queda registrada en el resumen; `pnpm check` conserva el gate que rechaza las infracciones productivas. Una configuración inválida o un fallo de las herramientas hace fallar también `architecture:report`: limpia resultados previos, no conserva HTML obsoleto y adjunta un diagnóstico, nunca un falso «cero infracciones».
+
+Los fixtures incorrectos siguen verificándose por separado con `pnpm architecture`, incluida la equivalencia funcional de persistencia. El HTML descargable describe el `src` de esa ejecución; la evidencia de la web sigue siendo un snapshot del build con ejemplos educativos. Son alcances distintos.
+
 ## CI y publicación
 
 El workflow valida las pull requests sin publicar. En `main`, el mismo artefacto que pasó las pruebas de navegador se publica en GitHub Pages. Acciones fijadas por SHA, instalación con lockfile y permisos mínimos: lectura de contenido para validar; escritura de Pages e identidad OIDC solo para desplegar. No usa tokens personales.
