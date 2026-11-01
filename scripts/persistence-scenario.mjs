@@ -24,6 +24,7 @@ export function verifyPersistenceScenario(project = process.cwd()) {
     'application/order-repository.ts',
     'application/create-order.ts',
     'infrastructure/local-storage-order-repository.ts',
+    'infrastructure/order-storage-codec.ts',
   ];
   try {
     for (const file of sourcePaths) {
