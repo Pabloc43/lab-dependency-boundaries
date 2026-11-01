@@ -555,6 +555,22 @@ test('shows real coupled and injected sources with functional provenance and exa
     page.locator('strong').filter({ hasText: /^no-application-outward$/ }),
   ).toHaveCount(1);
   await expect(page.getByText('SIN INFRACCIONES', { exact: true })).toBeVisible();
+  await page
+    .getByText('Ver el contrato, el adaptador y la composición reales', { exact: true })
+    .click();
+  const codecPath = 'src/features/orders/infrastructure/order-storage-codec.ts';
+  const codec = page.getByRole('region', {
+    name: `Código real: ${codecPath}`,
+    exact: true,
+  });
+  expect(await codec.locator('code').textContent()).toBe(evidence.snippets[codecPath]);
+  expect(
+    await codec
+      .locator('span')
+      .evaluateAll(
+        (tokens) => new Set(tokens.map((token) => getComputedStyle(token).color)).size,
+      ),
+  ).toBeGreaterThan(1);
   await loadDiagrams(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
