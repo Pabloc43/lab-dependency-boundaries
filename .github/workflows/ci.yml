@@ -25,10 +25,28 @@ jobs:
         with:
           node-version: '24'
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - id: install
+        run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - name: Generate production architecture report
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm architecture:report
+      - name: Upload architecture diagnostics
+        id: architecture-artifact
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: architecture-report
+          path: reports/architecture/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Link architecture artifact in summary
+        if: ${{ !cancelled() && steps.architecture-artifact.outcome == 'success' }}
+        env:
+          ARTIFACT_URL: ${{ steps.architecture-artifact.outputs.artifact-url }}
+        run: printf '\n[Descargar architecture-report](%s) (requiere acceso a GitHub).\n' "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload validated site
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
