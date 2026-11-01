@@ -104,31 +104,38 @@ it('produces native HTML, raw JSON and an accurate production-only summary', () 
   expect(readFileSync(join(sandbox, 'step-summary.md'), 'utf8')).toBe(read('summary.md'));
 });
 
-it('renders real production violations without turning the existing gate green', () => {
-  writeFileSync(
-    join(sandbox, 'src/features/orders/ui/report-probe.ts'),
-    'export const notice = "probe";\n',
-  );
-  appendFileSync(
-    join(sandbox, 'src/features/orders/domain/order.ts'),
-    '\nexport { notice } from "../ui/report-probe";\n',
-  );
-  expect(generate()).toEqual({ exitCode: 1, violationCount: 1 });
-  expect(read('architecture.html')).toContain('no-domain-outward');
-  expect(read('summary.md')).toContain('Hay errores arquitectónicos');
-  expect(read('summary.md')).toContain('**1**');
+// This integration starts real CLI and formatter processes on shared CI runners.
+it(
+  'renders real production violations without turning the existing gate green',
+  { timeout: 30_000 },
+  () => {
+    writeFileSync(
+      join(sandbox, 'src/features/orders/ui/report-probe.ts'),
+      'export const notice = "probe";\n',
+    );
+    appendFileSync(
+      join(sandbox, 'src/features/orders/domain/order.ts'),
+      '\nexport { notice } from "../ui/report-probe";\n',
+    );
+    expect(generate()).toEqual({ exitCode: 1, violationCount: 1 });
+    expect(read('architecture.html')).toContain('no-domain-outward');
+    expect(read('summary.md')).toContain('Hay errores arquitectónicos');
+    expect(read('summary.md')).toContain('**1**');
 
-  const gate = spawnSync(
-    process.execPath,
-    [join(sandbox, 'scripts/architecture/index.mjs')],
-    {
-      cwd: sandbox,
-      encoding: 'utf8',
-    },
-  );
-  expect(gate.status).toBe(1);
-  expect(gate.stderr).toContain('Unexpected rules for valid');
-});
+    const gate = spawnSync(
+      process.execPath,
+      [join(sandbox, 'scripts/architecture/index.mjs')],
+      {
+        cwd: sandbox,
+        encoding: 'utf8',
+        timeout: 15_000,
+      },
+    );
+    expect(gate.error).toBeUndefined();
+    expect(gate.status).toBe(1);
+    expect(gate.stderr).toContain('Unexpected rules for valid');
+  },
+);
 
 it('fails on broken configuration and removes stale reports instead of implying zero errors', () => {
   mkdirSync(output(''), { recursive: true });
