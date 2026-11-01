@@ -4,19 +4,20 @@ Una aplicación de pedidos para comprobar una decisión de arquitectura: **el do
 
 [**Abrir demo**](https://pabloc43.github.io/lab-dependency-boundaries/) · [CI](https://github.com/Pabloc43/lab-dependency-boundaries/actions) · [Guía técnica](docs/technical-guide.md)
 
-![Demo de pedidos con tres productos, cantidades editables y almacenamiento en memoria](docs/images/order-demo.jpg)
+![Demo de pedidos con tres productos, cantidades editables y historial local](docs/images/order-demo.jpg)
 
-Pedidos en memoria, una falla de guardado simulada y límites verificables. Sin pagos ni servicios externos.
+Pedidos conservados en este navegador, fallas reales y simuladas diferenciadas y límites verificables. Sin pagos ni servicios externos.
 
-## Un límite, tres casos
+## Límites, cuatro casos
 
-| Caso                 | Qué comprueba dependency-cruiser              | Salida esperada           |
-| -------------------- | --------------------------------------------- | ------------------------- |
-| Aplicación           | Respeta las fronteras elegidas                | `0`                       |
-| Import incorrecto    | El dominio importa una notificación de UI     | `1` · `no-domain-outward` |
-| Dependencia circular | `a.ts` importa `b.ts` y `b.ts` importa `a.ts` | `1` · `no-circular`       |
+| Caso                  | Qué comprueba dependency-cruiser                                  | Salida esperada                      |
+| --------------------- | ----------------------------------------------------------------- | ------------------------------------ |
+| Aplicación            | Respeta las fronteras elegidas                                    | `0`                                  |
+| Import incorrecto     | El dominio importa una notificación de UI                         | `1` · `no-domain-outward`            |
+| Dependencia circular  | `a.ts` importa `b.ts` y `b.ts` importa `a.ts`                     | `1` · `no-circular`                  |
+| Persistencia acoplada | Aplicación construye el adaptador; la variante inyectada lo evita | `1` / `0` · `no-application-outward` |
 
-Los errores son fixtures aislados. `pnpm architecture` pasa cuando coinciden los tres resultados esperados.
+Los errores son fixtures aislados. `pnpm architecture` pasa cuando coinciden todos los resultados esperados, incluidas las dos variantes de persistencia.
 
 ## Ejecutar en local
 
@@ -30,7 +31,7 @@ pnpm check
 pnpm dev
 ```
 
-Abre la dirección que muestra Vite, bajo `/lab-dependency-boundaries/`. El pedido acepta cantidades enteras de **1 a 20**; **0** excluye el producto. Recargar elimina los pedidos guardados.
+Abre la dirección que muestra Vite, bajo `/lab-dependency-boundaries/`. El pedido acepta cantidades enteras de **1 a 20**; **0** excluye el producto. Recargar conserva el historial y reinicia el formulario. **Borrar historial de este lab** elimina solo sus pedidos locales, sin tocar otras claves del mismo origen.
 
 Para ejecutar las pruebas de navegador:
 
@@ -38,6 +39,8 @@ Para ejecutar las pruebas de navegador:
 pnpm exec playwright install chromium
 pnpm test:e2e
 ```
+
+La persistencia usa un documento versionado en localStorage, no un backend. Datos incompatibles o permisos bloqueados muestran errores; no se sustituyen silenciosamente por memoria. [Formato y límites](docs/technical-guide.md#persistencia-local).
 
 ## El código empieza por lo que hace
 
@@ -57,7 +60,7 @@ Miniatura estática del mapa. [Abrir el diagrama interactivo](https://pabloc43.g
 
 ## Explorar un fallo sin romper la demo
 
-Selecciona **Import incorrecto** o **Dependencia circular** en la demo. Reproduce los casos con `pnpm architecture`; la [guía técnica](docs/technical-guide.md#ver-una-infracción-directamente) incluye el comando para inspeccionar cada fallo y las pruebas de cobertura de las fronteras.
+Selecciona **Import incorrecto**, **Dependencia circular** o **Persistencia acoplada** en la demo. Reproduce los casos con `pnpm architecture`; la [guía técnica](docs/technical-guide.md#ver-una-infracción-directamente) incluye el comando para inspeccionar cada fallo y las pruebas de cobertura de las fronteras.
 
 La evidencia se genera del código durante el build: **no es un analizador online ni un indicador del último CI**. La herramienta verifica imports estáticos, no decide si una arquitectura es adecuada.
 
