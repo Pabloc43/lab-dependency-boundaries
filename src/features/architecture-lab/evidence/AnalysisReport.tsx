@@ -6,7 +6,7 @@ interface Props {
   children?: ReactNode;
 }
 export function AnalysisReport({ result, children }: Props) {
-  const valid = result?.id === 'valid';
+  const valid = result?.exitCode === 0 && result.violations.length === 0;
   return (
     <div className={styles['report-card']}>
       <span className={[styles['report-label'], valid ? styles.valid : ''].join(' ')}>

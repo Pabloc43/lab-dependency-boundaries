@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CodeBlock } from '../code/CodeBlock';
 import { AnalysisReport } from './AnalysisReport';
+import { PersistenceExample } from './PersistenceExample';
 import { CycleExample } from './CycleExample';
 import { useEvidence } from './useEvidence';
 import styles from './EvidenceExplorer.module.css';
@@ -40,6 +41,7 @@ export function EvidenceExplorer() {
           ['domain-to-ui', 'Import incorrecto'],
           ['cycle', 'Dependencia circular'],
           ['valid', 'Aplicación válida'],
+          ['persistence-coupling', 'Persistencia acoplada'],
         ].map(([id, label]) => (
           <button
             type="button"
@@ -57,6 +59,8 @@ export function EvidenceExplorer() {
         </p>
       ) : !evidence ? (
         <p role="status">Cargando el informe generado…</p>
+      ) : example === 'persistence-coupling' ? (
+        <PersistenceExample evidence={evidence} />
       ) : example === 'cycle' ? (
         <CycleExample evidence={evidence} result={result} />
       ) : (
