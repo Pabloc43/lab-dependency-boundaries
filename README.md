@@ -54,7 +54,7 @@ src/
 
 Cada componente tiene su carpeta con la implementación en `index.tsx`, su CSS Module y los hooks o pruebas exclusivos. Los contratos compartidos viven en el ancestro común más cercano; no hay barrels de reexportación. Las reglas de capas protegen pedidos; los ciclos y los imports no resueltos se comprueban en todo el código productivo.
 
-<a href="https://pabloc43.github.io/lab-dependency-boundaries/diagrams/architecture.html"><img src="public/diagrams/architecture.png" width="640" alt="Mapa de imports: la interfaz depende de aplicación y dominio; infraestructura implementa el puerto; dominio no importa adaptadores"></a>
+<a href="https://pabloc43.github.io/lab-dependency-boundaries/diagrams/architecture.html"><img src="public/diagrams/architecture.png" width="100%" alt="Mapa de imports: la interfaz depende de aplicación y dominio; infraestructura implementa el puerto; dominio no importa adaptadores"></a>
 
 Miniatura estática del mapa. [Abrir el diagrama interactivo](https://pabloc43.github.io/lab-dependency-boundaries/diagrams/architecture.html).
 
