@@ -4,7 +4,7 @@ import {
   type OrderLine,
   type Product,
 } from '../domain/order';
-import { LocalStorageOrderRepository } from '../infrastructure/local-storage-order-repository';
+import { LocalStorageOrderRepository } from '../infrastructure/order-repositories/local-storage';
 
 export interface CreateOrderDependencies {
   readonly getStorage: () => Storage;
@@ -17,7 +17,9 @@ export function createOrder({ getStorage, catalog, nextId }: CreateOrderDependen
   return async (lines: readonly OrderLine[]): Promise<Order> => {
     const priced = calculateOrder(lines, catalog);
     const order: Order = { id: nextId(), ...priced };
+
     await repository.save(order);
+
     return order;
   };
 }

@@ -1,5 +1,6 @@
 // The scan covers src; this prefix owns only the order feature's internal layers.
 const root = process.env.DEPENDENCY_BOUNDARY_ROOT || 'src/features/orders';
+
 module.exports = {
   forbidden: [
     {

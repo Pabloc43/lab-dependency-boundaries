@@ -6,8 +6,10 @@ assert.ok(
   files.some((file) => file.endsWith('.js')),
   'Expected a built client entry',
 );
+
 for (const file of files) {
   assert.ok(!/shiki|onig|\.wasm$/i.test(file), `Unexpected highlighter asset: ${file}`);
+
   if (file.endsWith('.js')) {
     assert.ok(
       !/shikijs|oniguruma|createHighlighter|WebAssembly|onig\.wasm/i.test(
@@ -17,4 +19,5 @@ for (const file of files) {
     );
   }
 }
+
 console.log('Client assets contain no Shiki runtime chunks or WASM.');

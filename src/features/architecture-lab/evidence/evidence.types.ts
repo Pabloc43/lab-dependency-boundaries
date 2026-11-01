@@ -1,4 +1,5 @@
 import type { HighlightedCode } from '../code/code-types';
+
 export interface AnalysisResult {
   id: string;
   exitCode: number;
@@ -11,6 +12,7 @@ export interface AnalysisResult {
   };
   violations: { from: string; to: string; rule: string; cyclePath?: string[] }[];
 }
+
 export interface WalkthroughExcerpt {
   id: string;
   path: string;
@@ -23,6 +25,7 @@ export interface WalkthroughExcerpt {
   source: string;
   code?: HighlightedCode;
 }
+
 export interface Evidence {
   generatedAt: string;
   walkthrough?: WalkthroughExcerpt[];

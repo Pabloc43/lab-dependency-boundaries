@@ -16,7 +16,9 @@ export function createOrder({ repository, catalog, nextId }: CreateOrderDependen
   return async (lines: readonly OrderLine[]): Promise<Order> => {
     const priced = calculateOrder(lines, catalog);
     const order: Order = { id: nextId(), ...priced };
+
     await repository.save(order);
+
     return order;
   };
 }

@@ -1,0 +1,31 @@
+.evidence-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  border: 1px solid #4d626b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.code-card {
+  background: #142733;
+  min-width: 0;
+}
+
+.code-label {
+  padding: 15px 20px;
+  color: #aabbbf;
+  font-size: 0.7rem;
+  border-bottom: 1px solid #354e5a;
+  overflow-wrap: anywhere;
+}
+
+.code-card pre {
+  padding: 24px;
+  color: #dbe7e0;
+}
+
+@media (max-width: 800px) {
+  .evidence-grid {
+    grid-template-columns: 1fr;
+  }
+}

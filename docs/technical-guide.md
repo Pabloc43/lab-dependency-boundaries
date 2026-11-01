@@ -29,7 +29,11 @@ pnpm preview  # servir el build estático
 
 El árbol comienza por lo que hace esta POC: `features/orders` contiene el pedido y `features/architecture-lab` su explicación y evidencia. Las capas de dominio, aplicación e infraestructura viven dentro de pedidos; no organizan toda la web. `app` solo compone el sitio y conecta los adaptadores.
 
-Cada componente posee su CSS Module. El estado y envío del formulario viven en `useOrderDemo`; la lectura y el borrado del historial, en `useOrderHistory`; la carga y cancelación HTTP, en `useEvidence`. La selección de ejemplos sigue siendo estado local del explorador. No hay una carpeta genérica de componentes comunes ni nuevas dependencias de estado.
+Cada componente tiene una carpeta propia con implementación real en `index.tsx`, su CSS Module y sus hooks o helpers exclusivos. Por ejemplo, `ui/OrderDemo/` posee el formulario, `useOrderDemo` y el formato de errores con sus pruebas; `ui/OrderHistory/` posee el historial y su hook. El contrato compartido `ui/order-services.types.ts` queda en el ancestro común, sin importar archivos privados de otro componente. No se añaden barrels de reexportación.
+
+Los adaptadores y sus pruebas de contrato compartidas se agrupan en `infrastructure/order-repositories/`. El codec y su prueba son una unidad privada dentro de `local-storage/order-storage-codec/`. Los scripts de arquitectura también agrupan implementación y pruebas por unidad: `scripts/architecture/index.mjs` es el comando principal, con `report/`, `persistence-scenario/`, `persistence-walkthrough/`, `cycle-path/` y `highlight/`. Los módulos sin colaboradores exclusivos permanecen como archivos, no reciben carpetas vacías de sentido.
+
+El estado y envío del formulario viven en `useOrderDemo`; la lectura y el borrado del historial, en `useOrderHistory`; la carga y cancelación HTTP, en `useEvidence`. La selección de ejemplos sigue siendo estado local del explorador. No hay una carpeta genérica de componentes comunes ni nuevas dependencias de estado.
 
 - **Dominio**: valida líneas y calcula importes en centavos enteros. No depende de otras capas ni paquetes externos.
 - **Aplicación**: coordina el caso de uso y define los puertos en `application/order-repository.ts`. No importa adaptadores.
@@ -73,13 +77,13 @@ Este comando ejecuta dependency-cruiser sobre la aplicación y sobre tres casos 
 
 El cuarto caso muestra `fixtures/persistence-coupling/src/application/create-order.ts`: el caso de uso importa y construye `LocalStorageOrderRepository`. Guarda correctamente, pero mezcla coordinación con elección del almacenamiento. La corrección es el `create-order.ts` productivo, que recibe `OrderRepository`; `app/composition.ts` construye el adaptador.
 
-`scripts/persistence-scenario.mjs` copia los módulos reales de dominio, contratos y almacenamiento a un directorio temporal y ejecuta cada variante por separado. Ambas deben compilar con TypeScript y superar el mismo flujo de guardado, recuperación desde otra instancia y borrado. Solo la variante acoplada puede producir exactamente una arista `no-application-outward` de aplicación a infraestructura; no se aceptan ciclos, imports no resueltos ni infracciones adicionales. Se elimina el temporal al terminar. El fixture parcial no está diseñado para compilarse solo desde su carpeta: el harness aporta esas copias reales.
+`scripts/architecture/persistence-scenario/index.mjs` copia los módulos reales de dominio, contratos y almacenamiento a un directorio temporal y ejecuta cada variante por separado. Ambas deben compilar con TypeScript y superar el mismo flujo de guardado, recuperación desde otra instancia y borrado. Solo la variante acoplada puede producir exactamente una arista `no-application-outward` de aplicación a infraestructura; no se aceptan ciclos, imports no resueltos ni infracciones adicionales. Se elimina el temporal al terminar. El fixture parcial no está diseñado para compilarse solo desde su carpeta: el harness aporta esas copias reales.
 
 Para reproducir este caso sin tocar las fuentes:
 
 ```sh
 pnpm architecture
-pnpm exec vitest run scripts/persistence-scenario.test.ts
+pnpm exec vitest run scripts/architecture/persistence-scenario/index.test.ts
 ```
 
 La evidencia incluye los fragmentos exactos ejecutados, los informes reales de ambas variantes y su comprobación funcional. El navegador no vuelve a ejecutar el escenario ni atribuye resultados de producción a esta POC.
@@ -90,7 +94,7 @@ El caso de persistencia muestra primero el arranque real: `main.tsx` ejecuta `bu
 
 Un desplegable separa el ensamblado de la ejecución: el adaptador y la operación se preparan al arrancar; al enviar el formulario, `handleSubmit` llama al hook, el hook invoca el servicio devuelto y este reenvía las líneas al caso de uso. La implementación de `save` inyectada contiene la falla simulada y delega al adaptador real solo en el recorrido normal. El adaptador valida el estado y escribe el documento local.
 
-Los fragmentos se seleccionan del AST de las fuentes durante el build y conservan texto, archivo, líneas y columnas originales. Si un selector no encuentra exactamente un nodo, el build falla en lugar de inventar un ejemplo. Las llamadas no son las flechas del grafo de imports: el caso de uso llama a `save` por contrato sin importar el adaptador; infraestructura importa ese contrato para implementarlo. Son extractos estáticos coloreados, no una traza capturada de llamadas. Las pruebas funcionales siguen comprobando el comportamiento por separado. Una evidencia antigua sin este recorrido muestra un aviso, sin impedir consultar los demás ejemplos.
+Los fragmentos se seleccionan del AST de las fuentes durante el build y conservan texto, archivo, líneas y columnas originales. Si un selector no encuentra exactamente un nodo, el build falla en lugar de inventar un ejemplo. Las llamadas no son las flechas del grafo de imports: el caso de uso llama a `save` por contrato sin importar el adaptador; infraestructura importa ese contrato para implementarlo. Son extractos estáticos coloreados, no una traza capturada de llamadas. Las pruebas funcionales siguen comprobando el comportamiento por separado. Una evidencia antigua sin este recorrido muestra un aviso, sin impedir consultar los demás ejemplos. Los fragmentos de evidencia cacheada conservan su archivo y ubicación originales. Las claves históricas del adaptador y del codec se reconocen solo como datos de evidencia y se etiquetan con esa ruta histórica; no existen aliases ni reexports productivos hacia las ubicaciones eliminadas.
 
 ### Ver una infracción directamente
 
@@ -118,6 +122,8 @@ El build genera `public/evidence.json` leyendo los informes reales y fragmentos 
 
 Los fragmentos y la configuración se colorean con Shiki durante el build, usando las gramáticas de TypeScript, TSX, JavaScript y JSON y el tema Dark+. Los tokens se renderizan como texto de React, no como HTML inyectado; cada bloque conserva el contenido original, incluidos espacios y saltos de línea. Los colores con contraste inferior a 4,5:1 se aclaran sobre el fondo real del bloque. El navegador descarga tokens adicionales en el JSON, pero no un motor de resaltado, gramáticas ni WASM. El ejemplo circular muestra sus dos fuentes reales y permite consultar el informe normalizado del análisis. La evidencia se revalida al cargar la página. Si llega una versión de la evidencia sin tokens —por ejemplo, desde caché— o estos no corresponden al texto original, el bloque muestra ese texto sin color en lugar de fallar.
 
+La carga comprueba la estructura de la evidencia antes de renderizarla. Los campos opcionales omitidos y los fragmentos vacíos de versiones anteriores siguen siendo válidos; un documento malformado muestra un error de carga sin inutilizar la aplicación de pedidos. Un análisis ausente no se presenta como cero infracciones. El bloque de código comprueba también que los tokens reconstruyan el texto exacto antes de usarlos.
+
 ## Pruebas
 
 `pnpm check` ejecuta formato con Prettier, tipos, lint, Vitest, comprobaciones arquitectónicas y build. `pnpm format` aplica el formato localmente. Las pruebas cubren totales, catálogo desconocido, cantidades inválidas, líneas duplicadas, precios inválidos, desbordamiento, persistencia y recuperación tras una falla.
@@ -126,12 +132,13 @@ Playwright verifica el pedido en escritorio y móvil, errores visibles, la naveg
 
 ## Informe HTML del CI
 
-`pnpm architecture:report` analiza **solo el código productivo de `src`**, con los mismos límites de pedidos y exclusiones de tests que la comprobación existente. Ejecuta una sola vez el analizador JSON y reutiliza ese resultado con los formatters nativos `depcruise-fmt -T err --exit-code` y `depcruise-fmt -T err-html`. No hay un renderer HTML propio ni dependencias nuevas.
+`pnpm architecture:report` analiza **solo el código productivo de `src`**, con los mismos límites de pedidos y exclusiones de tests que la comprobación existente. Ejecuta una sola vez el analizador JSON y normaliza ese resultado con `depcruise-fmt -T json` y usa el JSON canónico con los formatters nativos `depcruise-fmt -T err --exit-code` y `depcruise-fmt -T err-html`. No hay un renderer HTML propio ni dependencias nuevas.
 
 El comando regenera `reports/architecture/` (ignorado por Git):
 
 - `architecture.html`: informe HTML nativo para abrir en el navegador.
 - `architecture.json`: informe original del analizador.
+- `architecture-formatted.json`: normalización nativa usada por HTML, consola y resumen; el conteo de ciclos puede diferir del análisis original.
 - `architecture.txt`: salida del formatter de consola.
 - `summary.md`: alcance, SHA disponible, versión, estado y conteo de infracciones.
 
@@ -139,7 +146,7 @@ En **Actions → ejecución → Artifacts**, descarga **architecture-report** y 
 
 Tras una instalación correcta, el workflow intenta generar y adjuntar el informe aunque fallen tipos, tests, límites o E2E; no lo hace si la ejecución fue cancelada. Un reporte sin errores de dependencias **no significa que el CI completo haya pasado**. Los permisos del workflow no cambian.
 
-Encontrar infracciones reales genera HTML y un resumen de error, pero el comando diagnóstico termina con `0` si pudo analizar y formatear correctamente. La salida nativa `0`/`1` queda registrada en el resumen; `pnpm check` conserva el gate que rechaza las infracciones productivas. Una configuración inválida o un fallo de las herramientas hace fallar también `architecture:report`: limpia resultados previos, no conserva HTML obsoleto y adjunta un diagnóstico, nunca un falso «cero infracciones».
+Encontrar infracciones reales genera HTML y un resumen de error, pero el comando diagnóstico termina con `0` si pudo analizar y formatear correctamente. La salida nativa y la aconsejada quedan registradas en el resumen: pueden ser conteos mayores que `1`, no un booleano. Se comprueba su correspondencia incluso cuando el proceso limita la salida a 8 bits; `pnpm check` conserva el gate que rechaza las infracciones productivas. Una configuración inválida o un fallo de las herramientas hace fallar también `architecture:report`: limpia resultados previos, no conserva HTML obsoleto y adjunta un diagnóstico, nunca un falso «cero infracciones».
 
 Los fixtures incorrectos siguen verificándose por separado con `pnpm architecture`, incluida la equivalencia funcional de persistencia. El HTML descargable describe el `src` de esa ejecución; la evidencia de la web sigue siendo un snapshot del build con ejemplos educativos. Son alcances distintos.
 
@@ -167,7 +174,6 @@ Dependency-cruiser comprueba dependencias estáticas y reglas elegidas. No detec
 
 - [dependency-cruiser: reglas](https://github.com/sverweij/dependency-cruiser/blob/main/doc/rules-reference.md)
 - [Código del caso de uso](../src/features/orders/application/create-order.ts)
-- [Mensaje de ejemplo para LinkedIn](linkedin-post.md)
 
 ## Licencia
 

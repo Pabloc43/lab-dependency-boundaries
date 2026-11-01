@@ -34,22 +34,28 @@ export function calculateOrder(
   if (lines.length === 0) {
     throw new OrderValidationError('El pedido debe incluir al menos un producto.');
   }
+
   const seen = new Set<string>();
   const priced = lines.map(({ productId, quantity }) => {
     if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 20) {
       throw new OrderValidationError('La cantidad debe ser un entero entre 1 y 20.');
     }
+
     if (seen.has(productId)) {
       throw new OrderValidationError('Un producto no puede repetirse en el pedido.');
     }
+
     seen.add(productId);
+
     const product = catalog.find((item) => item.id === productId);
     if (!product) {
       throw new OrderValidationError('El producto no pertenece al catálogo.');
     }
+
     if (!Number.isSafeInteger(product.priceCents) || product.priceCents < 0) {
       throw new OrderValidationError('El precio del producto no es válido.');
     }
+
     return {
       productId,
       quantity,
@@ -57,6 +63,7 @@ export function calculateOrder(
       unitPriceCents: product.priceCents,
     };
   });
+
   // Keep arithmetic in integer cents; rounding belongs at the input boundary.
   const totalCents = priced.reduce(
     (total, line) => total + line.quantity * line.unitPriceCents,
@@ -65,5 +72,6 @@ export function calculateOrder(
   if (!Number.isSafeInteger(totalCents)) {
     throw new OrderValidationError('El total supera el rango permitido.');
   }
+
   return { lines: priced, totalCents };
 }

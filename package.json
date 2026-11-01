@@ -2,23 +2,20 @@
   "name": "lab-dependency-boundaries",
   "version": "1.0.0",
   "description": "A small executable architecture lab with dependency-cruiser",
-  "main": "index.js",
   "scripts": {
     "dev": "pnpm architecture && vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "architecture": "node scripts/evidence.mjs",
+    "architecture": "node scripts/architecture/index.mjs",
     "build": "pnpm architecture && tsc --noEmit && vite build && node scripts/check-client-bundle.mjs",
     "preview": "vite preview",
     "check": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "architecture:report": "node scripts/architecture-report.mjs"
+    "architecture:report": "node scripts/architecture/report/index.mjs"
   },
-  "keywords": [],
-  "author": "",
   "license": "MIT",
   "type": "module",
   "dependencies": {

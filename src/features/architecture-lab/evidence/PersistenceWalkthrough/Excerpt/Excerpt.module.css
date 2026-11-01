@@ -1,0 +1,11 @@
+.excerpt {
+  min-width: 0;
+  margin: 14px 0;
+}
+
+.location {
+  font-family: monospace;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+  color: #53635c;
+}

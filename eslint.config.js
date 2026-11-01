@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import hooks from 'eslint-plugin-react-hooks';
 import refresh from 'eslint-plugin-react-refresh';
+
 export default tseslint.config(
   { ignores: ['dist/**', 'public/**', 'node_modules/**', 'fixtures/**'] },
   js.configs.recommended,

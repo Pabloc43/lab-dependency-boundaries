@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { calculateOrder, type Product } from './domain/order';
 import { createOrder } from './application/create-order';
-import { MemoryOrderRepository } from './infrastructure/memory-order-repository';
+import { MemoryOrderRepository } from './infrastructure/order-repositories/memory-order-repository';
+
 const catalog: readonly Product[] = [
   { id: 'a', name: 'Notebook', priceCents: 1250 },
   { id: 'b', name: 'Pencil', priceCents: 350 },
 ];
+
 describe('order rules', () => {
   it('calculates in integer cents', () =>
     expect(
@@ -17,17 +19,21 @@ describe('order rules', () => {
         catalog,
       ).totalCents,
     ).toBe(1950));
+
   it('rejects an empty order', () =>
     expect(() => calculateOrder([], catalog)).toThrow('al menos'));
+
   it.each([0, -1, 1.5, 21, NaN, Infinity])('rejects invalid quantity %s', (quantity) =>
     expect(() => calculateOrder([{ productId: 'a', quantity }], catalog)).toThrow(
       'cantidad',
     ),
   );
+
   it('rejects an unknown product', () =>
     expect(() =>
       calculateOrder([{ productId: 'missing', quantity: 1 }], catalog),
     ).toThrow('catálogo'));
+
   it('rejects duplicate lines', () =>
     expect(() =>
       calculateOrder(
@@ -38,6 +44,7 @@ describe('order rules', () => {
         catalog,
       ),
     ).toThrow('repetirse'));
+
   it('rejects invalid catalog prices', () =>
     expect(() =>
       calculateOrder(
@@ -45,6 +52,7 @@ describe('order rules', () => {
         [{ ...catalog[0], priceCents: -1 }],
       ),
     ).toThrow('precio'));
+
   it('rejects an unsafe total', () =>
     expect(() =>
       calculateOrder(
@@ -53,6 +61,7 @@ describe('order rules', () => {
       ),
     ).toThrow('rango'));
 });
+
 describe('create order', () => {
   it('persists a calculated order through its port', async () => {
     const repository = new MemoryOrderRepository();
@@ -61,6 +70,7 @@ describe('create order', () => {
     expect(order.totalCents).toBe(2500);
     expect(repository.find('order-1')).toEqual(order);
   });
+
   it('does not save an invalid order', async () => {
     let saved = false;
     const submit = createOrder({
@@ -75,9 +85,11 @@ describe('create order', () => {
     await expect(submit([])).rejects.toThrow();
     expect(saved).toBe(false);
   });
+
   it('propagates storage failure and allows retry', async () => {
     const repository = new MemoryOrderRepository();
     const submit = createOrder({ repository, catalog, nextId: () => 'retry' });
+
     repository.simulateNextFailure();
     await expect(submit([{ productId: 'a', quantity: 1 }])).rejects.toThrow('Simulated');
     expect(repository.find('retry')).toBeUndefined();
@@ -86,6 +98,7 @@ describe('create order', () => {
       'retry',
     );
   });
+
   it('does not expose stored objects for mutation', async () => {
     const repository = new MemoryOrderRepository();
     const original = {
@@ -93,6 +106,7 @@ describe('create order', () => {
       lines: [{ productId: 'a', name: 'Notebook', quantity: 1, unitPriceCents: 1250 }],
       totalCents: 1250,
     };
+
     await repository.save(original);
     original.totalCents = 1;
     expect(repository.find('copy')?.totalCents).toBe(1250);
