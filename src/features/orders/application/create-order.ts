@@ -4,9 +4,7 @@ import {
   type OrderLine,
   type Product,
 } from '../domain/order';
-export interface OrderRepository {
-  save(order: Order): Promise<void>;
-}
+import type { OrderRepository } from './order-repository';
 
 export interface CreateOrderDependencies {
   readonly repository: OrderRepository;
