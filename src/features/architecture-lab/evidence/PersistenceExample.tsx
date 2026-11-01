@@ -1,4 +1,5 @@
 import { CodeBlock } from '../code/CodeBlock';
+import { PersistenceWalkthrough } from './PersistenceWalkthrough';
 import { AnalysisReport } from './AnalysisReport';
 import type { Evidence } from './evidence.types';
 import styles from './PersistenceExample.module.css';
@@ -31,6 +32,7 @@ export function PersistenceExample({ evidence }: { evidence: Evidence }) {
         aplicación a infraestructura. No detecta si localStorage funciona: eso lo
         comprueban las pruebas de comportamiento.
       </p>
+      <PersistenceWalkthrough evidence={evidence} />
       {variants.map((variant) => {
         const result = evidence.results.find((item) => item.id === variant.id);
         return (

@@ -11,8 +11,21 @@ export interface AnalysisResult {
   };
   violations: { from: string; to: string; rule: string; cyclePath?: string[] }[];
 }
+export interface WalkthroughExcerpt {
+  id: string;
+  path: string;
+  start: number;
+  end: number;
+  startLine: number;
+  endLine: number;
+  startColumn: number;
+  endColumn: number;
+  source: string;
+  code?: HighlightedCode;
+}
 export interface Evidence {
   generatedAt: string;
+  walkthrough?: WalkthroughExcerpt[];
   results: AnalysisResult[];
   snippets: Record<string, string>;
   highlightedSnippets?: Record<string, HighlightedCode>;
