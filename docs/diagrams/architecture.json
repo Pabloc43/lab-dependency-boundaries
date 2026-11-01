@@ -11,7 +11,7 @@
           "label": "Módulo lógico"
         },
         "database": {
-          "label": "Adaptador en memoria"
+          "label": "Adaptadores locales"
         },
         "frontend": {
           "label": "Interfaz"
@@ -38,7 +38,7 @@
       "id": "application",
       "type": "backend",
       "label": "Aplicación",
-      "sublabel": "Caso de uso y puerto",
+      "sublabel": "Casos de uso y puertos",
       "pos": [
         460,
         100
@@ -66,9 +66,23 @@
       "id": "infrastructure",
       "type": "database",
       "label": "Infraestructura",
-      "sublabel": "Repositorio en memoria",
+      "sublabel": "localStorage / memoria",
       "pos": [
         460,
+        400
+      ],
+      "size": [
+        240,
+        90
+      ]
+    },
+    {
+      "id": "composition",
+      "type": "backend",
+      "label": "Composición",
+      "sublabel": "Conecta servicios y adaptador",
+      "pos": [
+        60,
         400
       ],
       "size": [
@@ -95,31 +109,50 @@
       "to": "application",
       "label": "importa el puerto",
       "variant": "dashed"
+    },
+    {
+      "from": "composition",
+      "to": "ui",
+      "label": "importa servicios UI",
+      "variant": "dashed"
+    },
+    {
+      "from": "composition",
+      "to": "infrastructure",
+      "label": "elige adaptador",
+      "variant": "emphasis",
+      "labelDy": 28
+    },
+    {
+      "from": "composition",
+      "to": "application",
+      "label": "importa casos de uso",
+      "variant": "dashed"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Dirección elegida",
+      "title": "Imports, no llamadas",
       "items": [
-        "Las flechas representan imports estáticos.",
-        "El dominio no importa las otras capas."
+        "El dominio conserva reglas puras.",
+        "Aplicación conoce puertos, no localStorage."
       ]
     },
     {
       "dot": "emerald",
-      "title": "Composición",
+      "title": "Una decisión sustituible",
       "items": [
-        "La raíz conecta el caso de uso con el adaptador.",
-        "El puerto permite sustituir la persistencia."
+        "La composición inyecta el almacenamiento.",
+        "La demo usa localStorage; las pruebas, memoria."
       ]
     },
     {
       "dot": "amber",
-      "title": "Límite de la herramienta",
+      "title": "Límite de esta POC",
       "items": [
-        "Comprueba reglas, no calidad del diseño.",
-        "Esta demo no tiene servidor ni persistencia durable."
+        "Historial local a este navegador y origen.",
+        "Sin servidor ni sincronización entre pestañas."
       ]
     }
   ]
