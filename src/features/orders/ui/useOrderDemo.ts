@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { OrderValidationError, type Order, type Product } from '../domain/order';
+import { type Order, type Product } from '../domain/order';
+import { orderSubmissionErrorMessage } from './order-submission-error';
 import type { createOrder } from '../application/create-order';
 
 export interface OrderDemoServices {
@@ -48,15 +49,7 @@ export function useOrderDemo({
     try {
       setOrder(await submitOrder(lines));
     } catch (cause) {
-      setError(
-        cause instanceof OrderValidationError
-          ? cause.message
-          : cause instanceof Error
-            ? cause.message.startsWith('No se pudo')
-              ? cause.message
-              : `No se pudo guardar el pedido. ${cause.message}`
-            : 'No se pudo guardar el pedido. Intenta nuevamente.',
-      );
+      setError(orderSubmissionErrorMessage(cause));
     } finally {
       setPending(false);
       setFailure(false);
