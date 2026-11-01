@@ -3,6 +3,7 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { assertBoundaryCoverage } from './architecture-coverage.ts';
 import { deriveCyclePath } from './cycle-path.ts';
+import { verifyPersistenceScenario } from './persistence-scenario.mjs';
 import { createCodeHighlighter } from './highlight.ts';
 const scenarios = [
   {
@@ -118,16 +119,27 @@ const results = scenarios.map(({ id, scanRoot, boundaryRoot, expectedRules }) =>
     })),
   };
 });
+const persistence = verifyPersistenceScenario();
+results.push(...persistence.results);
+for (const result of persistence.results) {
+  console.log(
+    `${result.id}: ${result.violations.length} expected violations; exit ${result.exitCode}; typecheck and save/recover/clear passed`,
+  );
+}
 const snippets = Object.fromEntries(
   [
     'src/features/orders/application/create-order.ts',
     'src/features/orders/domain/order.ts',
+    'src/features/orders/application/order-repository.ts',
+    'src/features/orders/infrastructure/local-storage-order-repository.ts',
+    'src/app/composition.ts',
     'fixtures/domain-to-ui/src/domain/order.ts',
     '.dependency-cruiser.cjs',
     'fixtures/cycle/src/domain/a.ts',
     'fixtures/cycle/src/domain/b.ts',
   ].map((file) => [file, readFileSync(file, 'utf8')]),
 );
+Object.assign(snippets, persistence.snippets);
 const highlighter = await createCodeHighlighter();
 const highlightedSnippets = Object.fromEntries(
   Object.entries(snippets).map(([file, source]) => [
