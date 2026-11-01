@@ -66,6 +66,7 @@ export function PersistenceExample({ evidence }: { evidence: Evidence }) {
         {[
           'src/features/orders/application/order-repository.ts',
           'src/features/orders/infrastructure/local-storage-order-repository.ts',
+          'src/features/orders/infrastructure/order-storage-codec.ts',
           'src/app/composition.ts',
         ].map((path) => (
           <div key={path}>
