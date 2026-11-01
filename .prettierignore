@@ -5,3 +5,4 @@ docs/diagrams/
 test-results/
 playwright-report/
 pnpm-lock.yaml
+reports/

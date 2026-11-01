@@ -64,6 +64,8 @@ Selecciona **Import incorrecto**, **Dependencia circular** o **Persistencia acop
 
 La evidencia se genera del código durante el build: **no es un analizador online ni un indicador del último CI**. La herramienta verifica imports estáticos, no decide si una arquitectura es adecuada.
 
+Cada ejecución del CI también ofrece **architecture-report**: HTML nativo de dependency-cruiser, JSON y resumen del código productivo, incluso si fallan otros checks. Se descarga desde **Actions → ejecución → Artifacts** (14 días); requiere acceso a GitHub. En local: `pnpm architecture:report`. Los fixtures esperados quedan fuera de ese informe. [Detalle y límites](docs/technical-guide.md#informe-html-del-ci).
+
 ## Herramientas utilizadas
 
 Las reglas de dependencias y los ciclos se comprueban con [dependency-cruiser](https://github.com/sverweij/dependency-cruiser). Los diagramas interactivos de arquitectura y CI se generaron con [Archify](https://github.com/tt-a1i/archify).
