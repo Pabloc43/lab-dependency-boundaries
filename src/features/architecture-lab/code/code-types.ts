@@ -5,7 +5,7 @@ export interface CodeToken {
 
 export interface HighlightedCode {
   readonly source: string;
-  readonly language: 'typescript' | 'javascript' | 'json';
+  readonly language: 'typescript' | 'tsx' | 'javascript' | 'json';
   readonly lines: readonly {
     readonly tokens: readonly CodeToken[];
     readonly ending: string;
