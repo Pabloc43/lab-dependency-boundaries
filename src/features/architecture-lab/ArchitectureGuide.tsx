@@ -36,8 +36,8 @@ export function ArchitectureGuide() {
             <span className={styles['layer-label']}>ADAPTADORES</span>
             <h3>Detalles reemplazables</h3>
             <p>
-              React presenta. El repositorio guarda en memoria. La raíz de composición
-              conecta ambos con el caso de uso.
+              React presenta. El repositorio guarda en localStorage. La raíz de
+              composición conecta ambos con el caso de uso.
             </p>
           </article>
         </div>
