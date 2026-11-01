@@ -679,3 +679,106 @@ test('keeps the persistence explanation usable with evidence from an older build
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('explains startup versus saving with literal source excerpts and keyboard disclosure', async ({
+  page,
+}) => {
+  const response = await page.request.get(
+    'http://127.0.0.1:4173/lab-dependency-boundaries/evidence.json',
+  );
+  const evidence = await response.json();
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Persistencia acoplada', exact: true }).click();
+  const walkthrough = page.getByRole('region', {
+    name: 'Del arranque al guardado',
+    exact: true,
+  });
+  await expect(
+    walkthrough.getByRole('region', { name: 'Recorrido real: bootstrap', exact: true }),
+  ).toBeVisible();
+  await expect(
+    walkthrough.getByRole('region', { name: 'Recorrido real: app-props', exact: true }),
+  ).toBeVisible();
+  await expect(
+    walkthrough.getByText('son esos servicios como props:', { exact: false }),
+  ).toBeVisible();
+  const summary = walkthrough.getByText(
+    'Ver cómo se ensamblan y ejecutan los servicios',
+    { exact: true },
+  );
+  await summary.focus();
+  await summary.press('Enter');
+  await expect(summary.locator('..')).toHaveAttribute('open', '');
+  await expect(
+    walkthrough.getByText('Fragmento no incluido en esta versión de la evidencia.', {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    walkthrough.getByText('Este recorrido distingue llamadas de imports.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  for (const excerpt of evidence.walkthrough) {
+    expect(excerpt.code.language).toBe(
+      excerpt.path.endsWith('.tsx') ? 'tsx' : 'typescript',
+    );
+    const block = walkthrough.getByRole('region', {
+      name: `Recorrido real: ${excerpt.id}`,
+      exact: true,
+    });
+    expect(await block.locator('code').textContent()).toBe(excerpt.source);
+    const location = `${excerpt.path} · L${excerpt.startLine}:C${excerpt.startColumn}–L${excerpt.endLine}:C${excerpt.endColumn}`;
+    await expect(block.locator('..').getByText(location, { exact: true })).toBeVisible();
+    expect(
+      await block
+        .locator('span')
+        .evaluateAll(
+          (tokens) =>
+            new Set(
+              tokens
+                .filter((token) => token.textContent?.trim())
+                .map((token) => getComputedStyle(token).color),
+            ).size,
+        ),
+    ).toBeGreaterThan(1);
+  }
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).toBe(true);
+  await loadDiagrams(page);
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(result.violations).toEqual([]);
+  await summary.focus();
+  await summary.press('Space');
+  await expect(summary.locator('..')).not.toHaveAttribute('open', '');
+});
+
+test('keeps existing examples usable when an older build has no source walkthrough', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.route('**/evidence.json', async (route) => {
+    const response = await route.fetch();
+    const evidence = await response.json();
+    delete evidence.walkthrough;
+    await route.fulfill({ response, json: evidence });
+  });
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Persistencia acoplada', exact: true }).click();
+  await expect(
+    page.getByText('Esta versión de la evidencia no incluye el recorrido del código.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', {
+      name: 'Código de persistencia: persistence-injected',
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});
