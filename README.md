@@ -1,6 +1,6 @@
 # Dependency Boundaries Lab
 
-Una aplicación de pedidos para comprobar una decisión de arquitectura: **el dominio no depende de la interfaz**.
+Una aplicación de pedidos para comprobar **límites entre dominio, aplicación, interfaz y persistencia** mediante reglas ejecutables.
 
 [**Abrir demo**](https://pabloc43.github.io/lab-dependency-boundaries/) · [CI](https://github.com/Pabloc43/lab-dependency-boundaries/actions) · [Guía técnica](docs/technical-guide.md)
 
@@ -10,12 +10,12 @@ Pedidos conservados en este navegador, fallas reales y simuladas diferenciadas y
 
 ## Límites, cuatro casos
 
-| Caso                  | Qué comprueba dependency-cruiser                                  | Salida esperada                      |
-| --------------------- | ----------------------------------------------------------------- | ------------------------------------ |
-| Aplicación            | Respeta las fronteras elegidas                                    | `0`                                  |
-| Import incorrecto     | El dominio importa una notificación de UI                         | `1` · `no-domain-outward`            |
-| Dependencia circular  | `a.ts` importa `b.ts` y `b.ts` importa `a.ts`                     | `1` · `no-circular`                  |
-| Persistencia acoplada | Aplicación construye el adaptador; la variante inyectada lo evita | `1` / `0` · `no-application-outward` |
+| Caso                  | Qué comprueba dependency-cruiser                                  | Salida esperada                                          |
+| --------------------- | ----------------------------------------------------------------- | -------------------------------------------------------- |
+| Aplicación            | Respeta las fronteras elegidas                                    | `0`                                                      |
+| Import incorrecto     | El dominio importa una notificación de UI                         | `1` · `no-domain-outward`                                |
+| Dependencia circular  | `a.ts` importa `b.ts` y `b.ts` importa `a.ts`                     | `1` · `no-circular`                                      |
+| Persistencia acoplada | Aplicación construye el adaptador; la variante inyectada lo evita | Acoplada: `1` · `no-application-outward`; inyectada: `0` |
 
 Los errores son fixtures aislados. `pnpm architecture` pasa cuando coinciden todos los resultados esperados, incluidas las dos variantes de persistencia.
 
@@ -48,7 +48,7 @@ La persistencia usa un documento versionado en localStorage, no un backend. Dato
 src/
 ├── app/                         # Composición y estructura del sitio
 └── features/
-    ├── orders/                  # Dominio, caso de uso, adaptador e interfaz
+    ├── orders/                  # Dominio, casos de uso, adaptadores e interfaz
     └── architecture-lab/        # Guía, evidencia y visores interactivos
 ```
 
