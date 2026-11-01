@@ -32,6 +32,22 @@ describe('build-time highlighting', () => {
       new Set(lines.flatMap(({ tokens }) => tokens.map(({ color }) => color))).size,
     ).toBeGreaterThan(3);
   });
+  it('preserves JSX text, expressions and contrast with the TSX grammar', () => {
+    const source =
+      '<form onSubmit={handleSubmit}>\r\n  <OrderDemo {...services} />\r\n</form>\r\n';
+    const highlighted = highlighter.highlight(source, 'tsx');
+    expect(highlighted.language).toBe('tsx');
+    expect(
+      highlighted.lines
+        .map(
+          ({ tokens, ending }) => tokens.map(({ content }) => content).join('') + ending,
+        )
+        .join(''),
+    ).toBe(source);
+    const tokens = highlighted.lines.flatMap(({ tokens }) => tokens);
+    expect(new Set(tokens.map(({ color }) => color)).size).toBeGreaterThan(3);
+    expect(tokens.every(({ color }) => contrastRatio(color) >= 4.5)).toBe(true);
+  });
   it('highlights the real JSON report format', () => {
     const source = JSON.stringify(
       [{ rule: 'no-circular', from: 'a.ts', to: 'b.ts' }],

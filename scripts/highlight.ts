@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHighlighterCore } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import typescript from 'shiki/langs/typescript.mjs';
+import tsx from 'shiki/langs/tsx.mjs';
 import javascript from 'shiki/langs/javascript.mjs';
 import json from 'shiki/langs/json.mjs';
 import darkPlus from 'shiki/themes/dark-plus.mjs';
@@ -50,7 +51,7 @@ function readableColor(original: string): string {
 export async function createCodeHighlighter() {
   const highlighter = await createHighlighterCore({
     themes: [darkPlus],
-    langs: [typescript, javascript, json],
+    langs: [typescript, tsx, javascript, json],
     engine: createJavaScriptRegexEngine(),
   });
   return {

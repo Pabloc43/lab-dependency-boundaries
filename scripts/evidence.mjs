@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { assertBoundaryCoverage } from './architecture-coverage.ts';
 import { deriveCyclePath } from './cycle-path.ts';
 import { verifyPersistenceScenario } from './persistence-scenario.mjs';
+import { persistenceWalkthrough } from './persistence-walkthrough.ts';
 import { createCodeHighlighter } from './highlight.ts';
 const scenarios = [
   {
@@ -154,6 +155,13 @@ const highlightedReports = Object.fromEntries(
     highlighter.highlight(JSON.stringify(violations, null, 2), 'json'),
   ]),
 );
+const walkthrough = persistenceWalkthrough().map((excerpt) => ({
+  ...excerpt,
+  code: highlighter.highlight(
+    excerpt.source,
+    excerpt.path.endsWith('.tsx') ? 'tsx' : 'typescript',
+  ),
+}));
 highlighter.dispose();
 mkdirSync('public', { recursive: true });
 writeFileSync(
@@ -166,6 +174,7 @@ writeFileSync(
       snippets,
       highlightedSnippets,
       highlightedReports,
+      walkthrough,
     },
     null,
     2,
