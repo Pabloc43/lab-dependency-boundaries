@@ -84,6 +84,14 @@ pnpm exec vitest run scripts/persistence-scenario.test.ts
 
 La evidencia incluye los fragmentos exactos ejecutados, los informes reales de ambas variantes y su comprobación funcional. El navegador no vuelve a ejecutar el escenario ni atribuye resultados de producción a esta POC.
 
+### Seguir el arranque y el guardado
+
+El caso de persistencia muestra primero el arranque real: `main.tsx` ejecuta `buildApp()`, guarda el resultado en `services` y pasa sus campos a `App`, que los reenvía a `OrderDemo`. **No se pasa la función `buildApp` a los componentes.**
+
+Un desplegable separa el ensamblado de la ejecución: el adaptador y la operación se preparan al arrancar; al enviar el formulario, `handleSubmit` llama al hook, el hook invoca el servicio devuelto y este reenvía las líneas al caso de uso. La implementación de `save` inyectada contiene la falla simulada y delega al adaptador real solo en el recorrido normal. El adaptador valida el estado y escribe el documento local.
+
+Los fragmentos se seleccionan del AST de las fuentes durante el build y conservan texto, archivo, líneas y columnas originales. Si un selector no encuentra exactamente un nodo, el build falla en lugar de inventar un ejemplo. Las llamadas no son las flechas del grafo de imports: el caso de uso llama a `save` por contrato sin importar el adaptador; infraestructura importa ese contrato para implementarlo. Son extractos estáticos coloreados, no una traza capturada de llamadas. Las pruebas funcionales siguen comprobando el comportamiento por separado. Una evidencia antigua sin este recorrido muestra un aviso, sin impedir consultar los demás ejemplos.
+
 ### Ver una infracción directamente
 
 Para reproducir el import incorrecto sin modificar la aplicación:
@@ -108,7 +116,7 @@ Los fixtures no se importan desde la aplicación y no entran en el bundle. Para 
 
 El build genera `public/evidence.json` leyendo los informes reales y fragmentos del código. La página muestra ese resultado, incluida su fecha UTC. **No es un analizador online ni un indicador del último CI**; el enlace a Actions permite consultar las ejecuciones. No se versiona la evidencia generada.
 
-Los fragmentos y la configuración se colorean con Shiki durante el build, usando las gramáticas de TypeScript, JavaScript y JSON y el tema Dark+. Los tokens se renderizan como texto de React, no como HTML inyectado; cada bloque conserva el contenido original, incluidos espacios y saltos de línea. Los colores con contraste inferior a 4,5:1 se aclaran sobre el fondo real del bloque. El navegador descarga tokens adicionales en el JSON, pero no un motor de resaltado, gramáticas ni WASM. El ejemplo circular muestra sus dos fuentes reales y permite consultar el informe normalizado del análisis. La evidencia se revalida al cargar la página. Si llega una versión de la evidencia sin tokens —por ejemplo, desde caché— o estos no corresponden al texto original, el bloque muestra ese texto sin color en lugar de fallar.
+Los fragmentos y la configuración se colorean con Shiki durante el build, usando las gramáticas de TypeScript, TSX, JavaScript y JSON y el tema Dark+. Los tokens se renderizan como texto de React, no como HTML inyectado; cada bloque conserva el contenido original, incluidos espacios y saltos de línea. Los colores con contraste inferior a 4,5:1 se aclaran sobre el fondo real del bloque. El navegador descarga tokens adicionales en el JSON, pero no un motor de resaltado, gramáticas ni WASM. El ejemplo circular muestra sus dos fuentes reales y permite consultar el informe normalizado del análisis. La evidencia se revalida al cargar la página. Si llega una versión de la evidencia sin tokens —por ejemplo, desde caché— o estos no corresponden al texto original, el bloque muestra ese texto sin color en lugar de fallar.
 
 ## Pruebas
 
