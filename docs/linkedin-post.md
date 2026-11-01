@@ -2,11 +2,11 @@
 
 Separar el código en carpetas no garantiza que las responsabilidades estén separadas.
 
-Para probarlo armé una aplicación pequeña de pedidos. El dominio calcula el total, un caso de uso coordina el guardado y React presenta el resultado. El repositorio es en memoria: no hacía falta una base de datos para demostrar el límite.
+Para probarlo armé una aplicación pequeña de pedidos. El dominio calcula el total, un caso de uso coordina el guardado y React presenta el resultado. Un adaptador localStorage conserva el historial al recargar, sin backend. La memoria queda como implementación alternativa para las pruebas.
 
 La decisión que quise proteger es simple: el dominio no debe depender de la interfaz. Con dependency-cruiser la convertí en una regla que se ejecuta en CI, junto con las pruebas de comportamiento.
 
-También dejé dos ejemplos incorrectos: una regla de negocio importando una notificación visual y dos módulos con una dependencia circular. No alcanza con que el analizador falle: las pruebas comprueban que detecte la infracción que esperamos.
+También dejé ejemplos incorrectos: una regla de negocio importando una notificación visual, dos módulos con una dependencia circular y un caso de uso que construye directamente su adaptador de persistencia. Esta última variante guarda correctamente, pero incumple el límite; la versión inyectada conserva el comportamiento sin ese import. No alcanza con que el analizador falle: las pruebas comprueban que detecte la infracción que esperamos.
 
 La demo incluye el código relevante, diagramas y los resultados generados durante el build. No ejecuta el análisis en el navegador ni simula el estado del CI.
 

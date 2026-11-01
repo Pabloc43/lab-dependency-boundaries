@@ -29,11 +29,11 @@ pnpm preview  # servir el build estático
 
 El árbol comienza por lo que hace esta POC: `features/orders` contiene el pedido y `features/architecture-lab` su explicación y evidencia. Las capas de dominio, aplicación e infraestructura viven dentro de pedidos; no organizan toda la web. `app` solo compone el sitio y conecta los adaptadores.
 
-Cada componente posee su CSS Module. El estado y envío del formulario viven en `useOrderDemo`; la carga y cancelación HTTP, en `useEvidence`. La selección de ejemplos sigue siendo estado local del explorador. No hay una carpeta genérica de componentes comunes ni nuevas dependencias de estado.
+Cada componente posee su CSS Module. El estado y envío del formulario viven en `useOrderDemo`; la lectura y el borrado del historial, en `useOrderHistory`; la carga y cancelación HTTP, en `useEvidence`. La selección de ejemplos sigue siendo estado local del explorador. No hay una carpeta genérica de componentes comunes ni nuevas dependencias de estado.
 
 - **Dominio**: valida líneas y calcula importes en centavos enteros. No depende de otras capas ni paquetes externos.
-- **Aplicación**: coordina el caso de uso y define el puerto `OrderRepository`. No importa adaptadores.
-- **Infraestructura**: implementa ese puerto con un mapa en memoria. Copia los objetos para no exponer su estado interno.
+- **Aplicación**: coordina el caso de uso y define los puertos en `application/order-repository.ts`. No importa adaptadores.
+- **Infraestructura**: implementa los puertos con localStorage en la demo y memoria en pruebas. Ambos devuelven copias independientes.
 - **Interfaz**: recoge cantidades, presenta resultados y traduce errores inesperados a un mensaje seguro.
 - **Composición**: construye las dependencias y las pasa explícitamente. No hay contenedor de inyección ni localizador de servicios.
 
@@ -41,19 +41,48 @@ El contrato `OrderRepository.save(order): Promise<void>` permite sustituir el al
 
 Elegí esta separación porque permite demostrar inversión de dependencias con una operación concreta. En una pantalla trivial, mantener tantas fronteras podría costar más de lo que aporta.
 
+## Persistencia local
+
+`OrderRepository` conserva únicamente `save`. `OrderHistoryRepository` lo extiende con `list` y `clear`, sin hacer depender el adaptador del módulo que implementa `createOrder`. El cálculo de dominio permanece intacto. La UI recibe servicios de crear, listar y borrar, nunca el adaptador.
+
+La clave **`lab-dependency-boundaries:orders:v1`** contiene `{version: 1, orders: [...]}`. El listado presenta primero el último pedido guardado; guardar un ID existente lo reemplaza sin duplicarlo. Cambiar o leer un objeto no permite mutar el almacenamiento por referencia. Recargar recupera el historial, no el formulario.
+
+El adaptador valida estructura, IDs únicos, líneas, cantidades enteras entre 1 y 20, importes seguros no negativos y total consistente. Un JSON inválido o una versión desconocida impiden leer y guardar: no se sobrescriben silenciosamente. El acceso a `window.localStorage` también se resuelve dentro de cada operación, porque el propio getter puede lanzar un error.
+
+**Borrar historial de este lab** elimina únicamente esa clave, incluso cuando el documento es incompatible. No llama a `localStorage.clear()`. Un bloqueo o una cuota agotada no producen un éxito falso ni activan un repositorio en memoria. La lectura del historial tiene su propio error: un pedido ya guardado no se declara fallido porque una lectura posterior falle.
+
+Esto no es almacenamiento seguro ni transaccional entre pestañas: no hay sincronización, control de concurrencia, migraciones de versiones desconocidas, servidor ni recuperación entre dispositivos. El navegador puede borrar los datos; el historial no tiene paginación ni retención automática y puede agotar la cuota. No introduzcas información personal. Memoria sigue disponible para pruebas y comparación, no como alternativa silenciosa de la demo.
+
 ## Comprobar los límites
 
 ```sh
 pnpm architecture
 ```
 
-Este comando ejecuta dependency-cruiser sobre la aplicación y sobre dos fixtures independientes. Comprueba las reglas, los códigos de salida y las rutas involucradas. Un error del analizador, un JSON inválido o una infracción adicional hacen fallar el comando.
+Este comando ejecuta dependency-cruiser sobre la aplicación y sobre tres casos incorrectos aislados (el de persistencia incluye una variante corregida). Comprueba las reglas, los códigos de salida y las rutas involucradas. Un error del analizador, un JSON inválido o una infracción adicional hacen fallar el comando.
 
-| Escenario                                       | Resultado esperado               |
-| ----------------------------------------------- | -------------------------------- |
-| Aplicación productiva                           | Sin infracciones; exit code 0    |
-| Dominio importando una notificación de UI       | `no-domain-outward`; exit code 1 |
-| Dos módulos de dominio que se importan entre sí | `no-circular`; exit code 1       |
+| Escenario                                          | Resultado esperado                    |
+| -------------------------------------------------- | ------------------------------------- |
+| Aplicación productiva                              | Sin infracciones; exit code 0         |
+| Dominio importando una notificación de UI          | `no-domain-outward`; exit code 1      |
+| Dos módulos de dominio que se importan entre sí    | `no-circular`; exit code 1            |
+| Aplicación que construye localStorage directamente | `no-application-outward`; exit code 1 |
+| El mismo caso de uso con el puerto inyectado       | Sin infracciones; exit code 0         |
+
+### Persistencia: funcionar no basta
+
+El cuarto caso muestra `fixtures/persistence-coupling/src/application/create-order.ts`: el caso de uso importa y construye `LocalStorageOrderRepository`. Guarda correctamente, pero mezcla coordinación con elección del almacenamiento. La corrección es el `create-order.ts` productivo, que recibe `OrderRepository`; `app/composition.ts` construye el adaptador.
+
+`scripts/persistence-scenario.mjs` copia los módulos reales de dominio, contratos y almacenamiento a un directorio temporal y ejecuta cada variante por separado. Ambas deben compilar con TypeScript y superar el mismo flujo de guardado, recuperación desde otra instancia y borrado. Solo la variante acoplada puede producir exactamente una arista `no-application-outward` de aplicación a infraestructura; no se aceptan ciclos, imports no resueltos ni infracciones adicionales. Se elimina el temporal al terminar. El fixture parcial no está diseñado para compilarse solo desde su carpeta: el harness aporta esas copias reales.
+
+Para reproducir este caso sin tocar las fuentes:
+
+```sh
+pnpm architecture
+pnpm exec vitest run scripts/persistence-scenario.test.ts
+```
+
+La evidencia incluye los fragmentos exactos ejecutados, los informes reales de ambas variantes y su comprobación funcional. El navegador no vuelve a ejecutar el escenario ni atribuye resultados de producción a esta POC.
 
 ### Ver una infracción directamente
 
@@ -67,7 +96,7 @@ DEPENDENCY_BOUNDARY_ROOT=fixtures/domain-to-ui/src \
 
 El código de salida **1** es esperado: el dominio del fixture importa su interfaz. Para inspeccionar el ciclo, repite el comando sustituyendo ambas apariciones de `fixtures/domain-to-ui/src` por `fixtures/cycle/src`. El analizador debe mostrar `a.ts → b.ts → a.ts` y la regla `no-circular`.
 
-`pnpm architecture` comprueba ambos fallos controlados y la aplicación válida. Ese comando termina correctamente solo si las reglas, rutas y códigos de salida coinciden con lo esperado. Para extraer datos usa el reporter JSON; para verificar el código de salida de la infracción usa el reporter `err`.
+`pnpm architecture` comprueba los fallos controlados, la aplicación válida y las dos variantes de persistencia. Ese comando termina correctamente solo si las reglas, rutas y códigos de salida coinciden con lo esperado. Para extraer datos usa el reporter JSON; para verificar el código de salida de la infracción usa el reporter `err`.
 
 El análisis productivo recorre todo `src`, pero las reglas de capas apuntan a `src/features/orders`. Los tests co-localizados no entran en ese grafo. El build comprueba que haya módulos reales en las cuatro capas; una prueba adicional inyecta un import inválido en una copia temporal del dominio productivo y exige detectar la arista exacta. Así, mover carpetas no puede dejar reglas sin coincidencias con un resultado falsamente verde.
 
@@ -103,7 +132,7 @@ Esta adaptación pertenece a la integración: no modifica los HTML generados, su
 
 Los diagramas de arquitectura y CI se generan con [Archify](https://github.com/tt-a1i/archify), bajo licencia MIT; se incluyen su [licencia](../public/diagrams/ARCHIFY-LICENSE.txt) y [avisos de redistribución](../public/diagrams/ARCHIFY-NOTICES.md). El contenido está en español; los controles fijos del visor utilizan inglés. El mapa resume relaciones principales, no todos los imports del proyecto. Sus flechas representan imports, no llamadas en tiempo de ejecución.
 
-No hay pagos, stock, autenticación, impuestos, concurrencia entre usuarios ni persistencia tras recargar. Todos los productos y precios son ficticios. La falla de guardado es una opción explícita de la demo; no representa una caída de un servicio real.
+No hay pagos, stock, autenticación, impuestos ni concurrencia entre usuarios. La persistencia es local al navegador, no una base de datos compartida. Todos los productos y precios son ficticios. La falla simulada se identifica como tal y ocurre antes de escribir; los errores reales de acceso, cuota o formato se muestran por separado.
 
 Dependency-cruiser comprueba dependencias estáticas y reglas elegidas. No detecta todos los acoplamientos de comportamiento, imports calculados ni errores de negocio. Un CI verde no certifica una buena arquitectura.
 
